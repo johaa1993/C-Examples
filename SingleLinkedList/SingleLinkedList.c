@@ -1,11 +1,6 @@
 #include "SingleLinkedList.h"
 
-const List LIST_EMPTY =
-{
-	NULL,
-	0
-};
-
+const List LIST_EMPTY = { NULL, 0 };
 
 void List_insert(List* list, const void* item)
 {
