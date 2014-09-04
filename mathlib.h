@@ -1,8 +1,23 @@
 #include <string.h>
 #include <math.h>
 
+
 /*
-@brief Multiplicate vectors
+@brief Multiplicate and accumulate a matrix with a vector (r = r + mv)
+@param[in] n dimensions
+@param[in] m matrix
+@param[in] v vector
+@param[out] r vector
+*/
+void fv_mac(size_t n, float const * m, float const * v, float * r)
+{
+	for (int i = 0; i < n; i++)
+	for (int j = 0; j < n; j++)
+		r[i] += m[j*n + i] * v[j];
+}
+
+/*
+@brief Multiplicate vectors (r = ab)
 @param[in] n dimensions
 @param[in] a vector
 @param[in] b vector
@@ -11,13 +26,11 @@
 void fv_mul(size_t n, float const * a, float const * b, float * r)
 {
 	for (int i = 0; i < n; i++)
-	{
 		r[i] = a[i] * b[i];
-	}
 }
 
 /*
-@brief Add vectors
+@brief Add vectors (r = a + b)
 @param[in] n dimensions
 @param[in] a vector
 @param[in] b vector
@@ -26,13 +39,11 @@ void fv_mul(size_t n, float const * a, float const * b, float * r)
 void fv_add(size_t n, float const * a, float const * b, float * r)
 {
 	for (int i = 0; i < n; i++)
-	{
 		r[i] = a[i] + b[i];
-	}
 }
 
 /*
-@brief Subtract vectors
+@brief Subtract vectors (r = a - b)
 @param[in] n dimensions
 @param[in] a vector
 @param[in] b vector
@@ -41,13 +52,35 @@ void fv_add(size_t n, float const * a, float const * b, float * r)
 void fv_sub(size_t n, float const * a, float const * b, float * r)
 {
 	for (int i = 0; i < n; i++)
-	{
 		r[i] = a[i] - b[i];
-	}
 }
 
 /*
-@brief Dot product
+@brief Divide a vector with a scalar value (r = r / s)
+@param[in] n dimensions
+@param[in] d scalar
+@param[out] r vector
+*/
+void fv_div(size_t n, float d, float * r)
+{
+	for (int i = 0; i < n; i++)
+		r[i] /= d;
+}
+
+/*
+@brief Multiplicate a vector with a scalar value (r = r * s)
+@param[in] n dimensions
+@param[in] d scalar
+@param[out] r vector
+*/
+void fv_mul(size_t n, float s, float * r)
+{
+	for (int i = 0; i < n; i++)
+		r[i] *= s;
+}
+
+/*
+@brief Dot product (a * b)
 @param[in] n dimensions
 @param[in] a vector
 @param[in] b vector
@@ -57,14 +90,12 @@ float fv_dot(size_t n, float const * a, float const * b)
 {
 	float sum = 0;
 	for (int i = 0; i < n; i++)
-	{
 		sum += (a[i] * b[i]);
-	}
 	return sum;
 }
 
 /*
-@brief Calculate magnitude squared
+@brief Calculate magnitude squared (v * v)
 @param[in] n dimensions
 @param[in] n vector
 @return magnitude^2
@@ -76,33 +107,28 @@ float fv_magnitude2(size_t n, float const * v)
 
 
 /*
-@brief Calculate magnitude
+@brief Calculate magnitude (|v|)
 @param[in] n dimensions
 @param[in] n vector
 @return magnitude
 */
 float fv_magnitude(size_t n, float const * v)
 {
-	float mag = fv_dot(n, v, v);
-	return sqrt(mag);
+	return sqrt(fv_dot(n, v, v));
 }
 
 
 /*
-@brief Normalize a vector
+@brief Normalize a vector (v = v / |v|)
 @param[out] r vector
 */
 void fv_normalize(size_t n, float * v)
 {
-	float mag = fv_magnitude(n, v);
-	for (int i = 0; i < n; i++)
-	{
-		v[i] /= mag;
-	}
+	fv_div(n, fv_magnitude(n, v), v);
 }
 
 /*
-@brief Multiplicate quaternions
+@brief Multiplicate quaternions (r = ab)
 @param[in] a quaternion
 @param[in] b quaternion
 @param[out] r quaternion
@@ -116,7 +142,7 @@ void qf_mul(float const * a, float const * b, float * r)
 }
 
 /*
-@brief Multiplicate quaternions and assign (r=rb)
+@brief Multiplicate quaternions and assign (r = rb)
 @param[in] b quaternion
 @param[out] r quaternion
 */
@@ -128,7 +154,7 @@ void qf_mulab(float const * b, float * r)
 }
 
 /*
-@brief Multiplicate quaternions and assign (r=br)
+@brief Multiplicate quaternions and assign (r = br)
 @param[in] b quaternion
 @param[out] r quaternion
 */
@@ -145,7 +171,7 @@ void qf_mulba(float const * b, float * r)
 @param[in] v direction
 @param[out] q quaternion
 */
-void qf_angleaxis(float a, const float * v, float * q)
+void qf_angleaxis(float a, float const * v, float * q)
 {
 	a /= 2.0f;
 	float s = sin(a);
@@ -155,7 +181,29 @@ void qf_angleaxis(float a, const float * v, float * q)
 	q[3] = v[3] * s;
 }
 
-void mf_mac(size_t nn, const float * a, const float * b, float * r)
+float qf_magnitude2(float const * q)
+{
+	return fv_magnitude2(4, q);
+}
+
+float qf_magnitude(float const * q)
+{
+	return fv_magnitude(4, q);
+}
+
+void qf_normalize(float * q)
+{
+	fv_normalize(4, q);
+}
+
+/*
+@brief Multiplicate and accumulate matrices (r = r + ab)
+@param[in] nn size
+@param[in] a matrix
+@param[in] b matrix
+@param[out] r matrix
+*/
+void mf_mac(size_t nn, float const * a, float const * b, float * r)
 {
 	int i, j, k;
 	for (i = 0; i < nn; i++)
@@ -164,8 +212,12 @@ void mf_mac(size_t nn, const float * a, const float * b, float * r)
 		r[i*nn + j] += a[i*nn + k] * b[k*nn + j];
 }
 
-
-void m3f_quaternionc(const float * q, float * r)
+/*
+@brief Construct a matrix from a quaternion
+@param[in] q quaternion
+@param[out] r matrix
+*/
+void m3f_quaternionc(float const * q, float * r)
 {
 	float ww = q[0] * q[0];
 	float wx2 = q[0] * q[1] * 2;
@@ -193,3 +245,4 @@ void m3f_quaternionc(const float * q, float * r)
 	r[5] = yz2 + wx2;
 	r[8] = ww - xx - yy + zz;
 }
+
