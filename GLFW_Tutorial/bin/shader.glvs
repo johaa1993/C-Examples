@@ -1,0 +1,14 @@
+#version 330 core
+
+layout (location = 0) in vec4 vposition;
+layout (location = 1) in vec4 vcolor;
+out vec4 fcolor;
+
+uniform mat4 transformation;
+
+void main()
+{
+  gl_Position = transformation * vec4 (vposition.x, vposition.y, vposition.z, 1.0);
+  //gl_Position = vec4 (vposition.x, vposition.y, vposition.z, 1.0);
+  fcolor = vcolor;
+}
