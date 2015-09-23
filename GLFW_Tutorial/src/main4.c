@@ -10,32 +10,38 @@
 #include <math.h>
 #include <unistd.h>
 
-#define Agl_Matrix4_Count 16
-#define Agl_Matrix3_Count 9
-typedef GLfloat Agl_Float_Matrix4[Agl_Matrix4_Count];
-typedef GLfloat Agl_float_matrix3[Agl_Matrix3_Count];
+#define LED_GLfloat_Size sizeof(GLfloat)
+
+#define LED_Matrix4_Count 16
+#define LED_Matrix3_Count 9
+#define LED_GLfloat_Matrix4_Size (LED_Matrix4_Count * LED_GLfloat_Size)
+#define LED_GLfloat_Matrix3_Size (LED_Matrix3_Count * LED_GLfloat_Size)
+typedef GLfloat LED_GLfloat_Matrix4[LED_Matrix4_Count];
+typedef GLfloat LED_GLfloat_matrix3[LED_Matrix3_Count];
+
 #define PI 3.14159265359
-#define Agl_Matrix_Map(N, R, C) R + (N * C)
-#define Agl_Matrix4_Position_11 Agl_Matrix_Map(4, 0, 0)
-#define Agl_Matrix4_Position_21 Agl_Matrix_Map(4, 1, 0)
-#define Agl_Matrix4_Position_31 Agl_Matrix_Map(4, 2, 0)
-#define Agl_Matrix4_Position_41 Agl_Matrix_Map(4, 3, 0)
-#define Agl_Matrix4_Position_12 Agl_Matrix_Map(4, 0, 1)
-#define Agl_Matrix4_Position_22 Agl_Matrix_Map(4, 1, 1)
-#define Agl_Matrix4_Position_32 Agl_Matrix_Map(4, 2, 1)
-#define Agl_Matrix4_Position_42 Agl_Matrix_Map(4, 3, 1)
-#define Agl_Matrix4_Position_13 Agl_Matrix_Map(4, 0, 2)
-#define Agl_Matrix4_Position_23 Agl_Matrix_Map(4, 1, 2)
-#define Agl_Matrix4_Position_33 Agl_Matrix_Map(4, 2, 2)
-#define Agl_Matrix4_Position_43 Agl_Matrix_Map(4, 3, 2)
-#define Agl_Matrix4_Position_14 Agl_Matrix_Map(4, 0, 3)
-#define Agl_Matrix4_Position_24 Agl_Matrix_Map(4, 1, 3)
-#define Agl_Matrix4_Position_34 Agl_Matrix_Map(4, 2, 3)
-#define Agl_Matrix4_Position_44 Agl_Matrix_Map(4, 3, 3)
+
+#define LED_Matrix_Map(N, R, C) (R + (N * C))
+#define LED_Matrix4_Position_11 LED_Matrix_Map(4, 0, 0)
+#define LED_Matrix4_Position_21 LED_Matrix_Map(4, 1, 0)
+#define LED_Matrix4_Position_31 LED_Matrix_Map(4, 2, 0)
+#define LED_Matrix4_Position_41 LED_Matrix_Map(4, 3, 0)
+#define LED_Matrix4_Position_12 LED_Matrix_Map(4, 0, 1)
+#define LED_Matrix4_Position_22 LED_Matrix_Map(4, 1, 1)
+#define LED_Matrix4_Position_32 LED_Matrix_Map(4, 2, 1)
+#define LED_Matrix4_Position_42 LED_Matrix_Map(4, 3, 1)
+#define LED_Matrix4_Position_13 LED_Matrix_Map(4, 0, 2)
+#define LED_Matrix4_Position_23 LED_Matrix_Map(4, 1, 2)
+#define LED_Matrix4_Position_33 LED_Matrix_Map(4, 2, 2)
+#define LED_Matrix4_Position_43 LED_Matrix_Map(4, 3, 2)
+#define LED_Matrix4_Position_14 LED_Matrix_Map(4, 0, 3)
+#define LED_Matrix4_Position_24 LED_Matrix_Map(4, 1, 3)
+#define LED_Matrix4_Position_34 LED_Matrix_Map(4, 2, 3)
+#define LED_Matrix4_Position_44 LED_Matrix_Map(4, 3, 3)
 
 
 
-int Agl_Read_File (char * Name, char * Buffer, int Buffer_Count)
+int LED_Read_File (char * Name, char * Buffer, int Buffer_Count)
 {
   FILE *File;
   size_t File_Count;
@@ -50,49 +56,179 @@ int Agl_Read_File (char * Name, char * Buffer, int Buffer_Count)
   return File_Count;
 }
 
-void Agl_Read_File_Null_Terminated (char * Name, char * Buffer, int Buffer_Count)
+void LED_Read_File_Null_Terminated (char * Name, char * Buffer, int Buffer_Count)
 {
   int File_Count;
-  File_Count = Agl_Read_File (Name, Buffer, Buffer_Count);
+  File_Count = LED_Read_File (Name, Buffer, Buffer_Count);
   Buffer[File_Count] = '\0';
 }
 
-GLuint Agl_Create_Shader (GLenum Type, char * Name, char * Buffer, int Buffer_Count)
+GLuint LED_GL_Shader_File (GLenum Type, char * Name, char * Buffer, int Buffer_Count)
 {
   GLuint Shader;
   Shader = glCreateShader (Type);
   assert (Shader > 0);
-  Agl_Read_File_Null_Terminated (Name, Buffer, Buffer_Count);
+  LED_Read_File_Null_Terminated (Name, Buffer, Buffer_Count);
   glShaderSource (Shader, 1, (const GLchar**)&Buffer, 0);
   glCompileShader (Shader);
   return Shader;
 }
 
-void Agl_Create_Shaders (const GLenum * Types, char ** Names, int Count, char * Buffer, int Buffer_Count, GLuint * Shader_Objects)
+void LED_GL_Shader_Files (const GLenum * Types, char ** Names, int Count, char * Buffer, int Buffer_Count, GLuint * Shader_Objects)
 {
   for (int i = 0; i < Count; i++)
   {
-    Shader_Objects[i] = Agl_Create_Shader (Types[i], Names[i], Buffer, Buffer_Count);
+    Shader_Objects[i] = LED_GL_Shader_File (Types[i], Names[i], Buffer, Buffer_Count);
   }
 }
 
 
-GLuint Agl_Create_Program (GLuint * shader_objects, int n)
+GLuint LED_GL_Create_Program (GLuint * Shader_Objects, int Count)
 {
-  GLuint program;
+  GLuint Program;
   GLint status;
-  GLint log_length;
-  assert (n > 0);
-  program = glCreateProgram ();
-  assert (program > 0);
+  assert (Count > 0);
+  Program = glCreateProgram ();
+  assert (Program > 0);
+  for (int i = 0; i < Count; i++)
+  {
+    assert (Shader_Objects[i] > 0);
+    glAttachShader (Program, Shader_Objects[i]);
+  }
+  glLinkProgram (Program);
+  return Program;
+}
+
+
+
+
+void LED_GLfloat_Matrix_Multiply_Accumulate (int Count, GLfloat * A, GLfloat * B, GLfloat * R)
+{
+  for (int i = 0; i < Count; i++)
+  {
+    for (int j = 0; j < Count; j++)
+    {
+      for (int k = 0; k < Count; k++)
+      {
+        R[LED_Matrix_Map(Count, i, j)] = R[LED_Matrix_Map(Count, i, j)] + A[LED_Matrix_Map(Count, i, k)] * B[LED_Matrix_Map(Count, k, j)];
+      }
+    }
+  }
+}
+
+void LED_GLfloat_Matrix_Product (int Count, GLfloat * A, GLfloat * B, GLfloat * R)
+{
+  for (int i = 0; i < Count; i++)
+  {
+    for (int j = 0; j < Count; j++)
+    {
+      R[LED_Matrix_Map (Count, i, j)] = 0.0f;
+      for (int k = 0; k < Count; k++)
+      {
+        R[LED_Matrix_Map (Count, i, j)] = R[LED_Matrix_Map (Count, i, j)] + A[LED_Matrix_Map (Count, i, k)] * B[LED_Matrix_Map (Count, k, j)];
+      }
+    }
+  }
+}
+
+
+void LED_GLfloat_Matrix_Make_Identity (int Count, GLfloat * Result)
+{
+  memset (Result, 0, (Count * Count) * LED_GLfloat_Size);
+  for (int i = 0; i < Count; i++)
+  {
+    Result[LED_Matrix_Map(Count, i, i)] = 1.0;
+  }
+}
+
+
+
+void LED_GLfloat_Matrix_Make_Frustum (LED_GLfloat_Matrix4 Matrix, float l, float r, float b, float t, float n, float f)
+{
+  float n2;
+  float rl;
+  float tb;
+  float nf;
+
+  n2 = 2.0 * n;
+  rl = r - l;
+  tb = t - b;
+  nf = n - f;
+
+  Matrix[LED_Matrix4_Position_11] = n2 / rl;
+  Matrix[LED_Matrix4_Position_21] = 0.0;
+  Matrix[LED_Matrix4_Position_31] = 0.0;
+  Matrix[LED_Matrix4_Position_41] = 0.0;
+
+  Matrix[LED_Matrix4_Position_12] = 0.0;
+  Matrix[LED_Matrix4_Position_22] = n2 / tb;
+  Matrix[LED_Matrix4_Position_32] = 0.0;
+  Matrix[LED_Matrix4_Position_42] = 0.0;
+
+  Matrix[LED_Matrix4_Position_13] = (r + l) / rl;
+  Matrix[LED_Matrix4_Position_23] = (t + b) / tb;
+  Matrix[LED_Matrix4_Position_33] = (f + n) / nf;
+  Matrix[LED_Matrix4_Position_43] = -1.0;
+
+  Matrix[LED_Matrix4_Position_14] = 0.0;
+  Matrix[LED_Matrix4_Position_24] = 0.0;
+  Matrix[LED_Matrix4_Position_34] = (f * n2) / nf;
+  Matrix[LED_Matrix4_Position_44] = 0.0;
+}
+
+void LED_GLfloat_Matrix_Make_Perspective (float *matrix, float fov, float aspect, float n, float f)
+{
+    float w;
+    float l;
+    l = n * tanf(fov * PI / 360.0);
+    w = l * aspect;
+    LED_GLfloat_Matrix_Make_Frustum (matrix, -w, w, -l, l, n, f);
+}
+
+void LED_GLfloat_Matrix_Make_Translation (float *matrix, float t0, float t1, float t2)
+{
+  matrix[LED_Matrix4_Position_11] = 1.0f;
+  matrix[LED_Matrix4_Position_21] = 0.0f;
+  matrix[LED_Matrix4_Position_31] = 0.0f;
+  matrix[LED_Matrix4_Position_41] = 0.0f;
+
+  matrix[LED_Matrix4_Position_12] = 0.0f;
+  matrix[LED_Matrix4_Position_22] = 1.0f;
+  matrix[LED_Matrix4_Position_32] = 0.0f;
+  matrix[LED_Matrix4_Position_42] = 0.0f;
+
+  matrix[LED_Matrix4_Position_13] = 0.0f;
+  matrix[LED_Matrix4_Position_23] = 0.0f;
+  matrix[LED_Matrix4_Position_33] = 1.0f;
+  matrix[LED_Matrix4_Position_43] = 0.0f;
+
+  matrix[LED_Matrix4_Position_14] = t0;
+  matrix[LED_Matrix4_Position_24] = t1;
+  matrix[LED_Matrix4_Position_34] = t2;
+  matrix[LED_Matrix4_Position_44] = 1.0f;
+}
+
+
+
+void LED_Print_Float_Matrix (float *matrix, int n)
+{
   for (int i = 0; i < n; i++)
   {
-    assert (shader_objects[i] > 0);
-    glAttachShader (program, shader_objects[i]);
+    for (int j = 0; j < n; j++)
+    {
+      printf ("%f ", matrix [(i) + (n * j)]);
+    }
+    printf ("\n");
   }
-  glLinkProgram (program);
-  return program;
 }
+
+
+
+
+
+
+
+
 
 
 void Assert_Shader (GLuint shader, char * buffer, int buffer_length)
@@ -111,6 +247,7 @@ void Assert_Shader (GLuint shader, char * buffer, int buffer_length)
   }
   assert (status == GL_TRUE);
 }
+
 
 void Assert_Shaders (GLuint * shader_objects, int shader_Count, char * buffer, int buffer_length)
 {
@@ -138,141 +275,6 @@ void Assert_Program (GLuint program, char * buffer, int buffer_length)
 }
 
 
-void Agl_Float_Matrix_Multiply_Accumulate (int n, GLfloat * A, GLfloat * B, GLfloat * R)
-{
-  for (int i = 0; i < n; i++)
-  {
-    for (int j = 0; j < n; j++)
-    {
-      for (int k = 0; k < n; k++)
-      {
-        R[Agl_Matrix_Map(n, i, j)] = R[Agl_Matrix_Map(n, i, j)] + A[Agl_Matrix_Map(n, i, k)] * B[Agl_Matrix_Map(n, k, j)];
-      }
-    }
-  }
-}
-
-void Agl_Float_Matrix_Product (int n, GLfloat * A, GLfloat * B, GLfloat * R)
-{
-  for (int i = 0; i < n; i++)
-  {
-    for (int j = 0; j < n; j++)
-    {
-      R[Agl_Matrix_Map (n, i, j)] = 0.0f;
-      for (int k = 0; k < n; k++)
-      {
-        R[Agl_Matrix_Map (n, i, j)] = R[Agl_Matrix_Map (n, i, j)] + A[Agl_Matrix_Map (n, i, k)] * B[Agl_Matrix_Map (n, k, j)];
-      }
-    }
-  }
-}
-
-
-void Agl_Float_Matrix_Make_Identity (int n, GLfloat * R)
-{
-  memset (R, 0, n * n);
-  for (int i = 0; i < n; i++)
-  {
-    R[(i) + (n * i)] = 1.0;
-  }
-}
-
-
-
-void Agl_Float_Matrix_Make_Frustum (Agl_Float_Matrix4 Matrix, float l, float r, float b, float t, float n, float f)
-{
-  float n2;
-  float rl;
-  float tb;
-  float nf;
-
-  n2 = 2.0 * n;
-  rl = r - l;
-  tb = t - b;
-  nf = n - f;
-
-  Matrix[Agl_Matrix4_Position_11] = n2 / rl;
-  Matrix[Agl_Matrix4_Position_21] = 0.0;
-  Matrix[Agl_Matrix4_Position_31] = 0.0;
-  Matrix[Agl_Matrix4_Position_41] = 0.0;
-
-  Matrix[Agl_Matrix4_Position_12] = 0.0;
-  Matrix[Agl_Matrix4_Position_22] = n2 / tb;
-  Matrix[Agl_Matrix4_Position_32] = 0.0;
-  Matrix[Agl_Matrix4_Position_42] = 0.0;
-
-  Matrix[Agl_Matrix4_Position_13] = (r + l) / rl;
-  Matrix[Agl_Matrix4_Position_23] = (t + b) / tb;
-  Matrix[Agl_Matrix4_Position_33] = (f + n) / nf;
-  Matrix[Agl_Matrix4_Position_43] = -1.0;
-
-  Matrix[Agl_Matrix4_Position_14] = 0.0;
-  Matrix[Agl_Matrix4_Position_24] = 0.0;
-  Matrix[Agl_Matrix4_Position_34] = (f * n2) / nf;
-  Matrix[Agl_Matrix4_Position_44] = 0.0;
-}
-
-void Agl_Float_Matrix_Make_Perspective (float *matrix, float fov, float aspect, float n, float f)
-{
-    float w;
-    float l;
-    l = n * tanf(fov * PI / 360.0);
-    w = l * aspect;
-    Agl_Float_Matrix_Make_Frustum (matrix, -w, w, -l, l, n, f);
-}
-
-void Agl_Float_Matrix_Make_Translation (float *matrix, float t0, float t1, float t2)
-{
-  matrix[Agl_Matrix4_Position_11] = 1.0f;
-  matrix[Agl_Matrix4_Position_21] = 0.0f;
-  matrix[Agl_Matrix4_Position_31] = 0.0f;
-  matrix[Agl_Matrix4_Position_41] = 0.0f;
-
-  matrix[Agl_Matrix4_Position_12] = 0.0f;
-  matrix[Agl_Matrix4_Position_22] = 1.0f;
-  matrix[Agl_Matrix4_Position_32] = 0.0f;
-  matrix[Agl_Matrix4_Position_42] = 0.0f;
-
-  matrix[Agl_Matrix4_Position_13] = 0.0f;
-  matrix[Agl_Matrix4_Position_23] = 0.0f;
-  matrix[Agl_Matrix4_Position_33] = 1.0f;
-  matrix[Agl_Matrix4_Position_43] = 0.0f;
-
-  matrix[Agl_Matrix4_Position_14] = t0;
-  matrix[Agl_Matrix4_Position_24] = t1;
-  matrix[Agl_Matrix4_Position_34] = t2;
-  matrix[Agl_Matrix4_Position_44] = 1.0f;
-}
-
-
-
-void Agl_Print_Float_Matrix (float *matrix, int n)
-{
-  for (int i = 0; i < n; i++)
-  {
-    for (int j = 0; j < n; j++)
-    {
-      printf ("%f ", matrix [(i) + (n * j)]);
-    }
-    printf ("\n");
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void Setup_GLEW_And_GLFW ()
 {
   GLFWwindow* w;
@@ -293,9 +295,9 @@ GLuint Setup_Shader_Program (char * Char_Buffer, int Char_Buffer_Length)
   char * Shader_Names[Shader_Count] = {"shader.glvs", "shader.glfs"};
   GLenum Shader_Types[Shader_Count] = {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER};
   GLuint Program_Object;
-  Agl_Create_Shaders (Shader_Types, Shader_Names, Shader_Count, Char_Buffer, Char_Buffer_Length, Shader_Objects);
+  LED_GL_Shader_Files (Shader_Types, Shader_Names, Shader_Count, Char_Buffer, Char_Buffer_Length, Shader_Objects);
   Assert_Shaders (Shader_Objects, Shader_Count, Char_Buffer, Char_Buffer_Length);
-  Program_Object = Agl_Create_Program (Shader_Objects, Shader_Count);
+  Program_Object = LED_GL_Create_Program (Shader_Objects, Shader_Count);
   Assert_Program (Program_Object, Char_Buffer, Char_Buffer_Length);
   return Program_Object;
   #undef Shader_Count
@@ -344,16 +346,20 @@ int Key_States[Key_States_Count];
 char General_Purpuse_Char_Buffer[General_Purpuse_Char_Buffer_Count];
 
 
-
+#define Vertex_Info_Position_Location 0
+#define Vertex_Info_Color_Location 1
+#define Vertex_Info_Position_Count 3
+#define Vertex_Info_Color_Count 3
 struct Vertex
 {
-  GLfloat Position[3];
-  GLubyte Color[3];
+  GLfloat Position[Vertex_Info_Position_Count];
+  GLubyte Color[Vertex_Info_Color_Count];
 };
-
-#define Vertex_Specification_Position_Offset (0)
-#define Vertex_Specification_Color_Offset (3 * sizeof(GLfloat))
-#define Vertex_Specification_Size (sizeof(struct Vertex))
+#define Vertex_Info_Position_Offset (0)
+#define Vertex_Info_Color_Offset (Vertex_Info_Position_Count * sizeof(GLfloat))
+#define Vertex_Info_Position_Type GL_FLOAT
+#define Vertex_Info_Color_Type GL_UNSIGNED_BYTE
+#define Vertex_Info_Size (sizeof(struct Vertex))
 
 struct Vertex vertices[4] =
 {
@@ -371,9 +377,9 @@ GLuint vertex_indices[] =
 
 
 
-Agl_Float_Matrix4 transformation = {0.0f};
-Agl_Float_Matrix4 mat_perspective;
-Agl_Float_Matrix4 mat_view;
+LED_GLfloat_Matrix4 transformation = {0.0f};
+LED_GLfloat_Matrix4 mat_perspective;
+LED_GLfloat_Matrix4 mat_view;
 
 GLFWwindow* main_window;
 GLuint shader_program;
@@ -402,10 +408,10 @@ int main (int argc, char** argv)
   glBufferData (GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
   glBindVertexArray (vao);
-  glEnableVertexAttribArray (0);
-  glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, Vertex_Specification_Size, (const GLvoid *)Vertex_Specification_Position_Offset);
-  glEnableVertexAttribArray (1);
-  glVertexAttribPointer (1, 3, GL_UNSIGNED_BYTE, GL_TRUE, Vertex_Specification_Size, (const GLvoid *)Vertex_Specification_Color_Offset);
+  glEnableVertexAttribArray (Vertex_Info_Position_Location);
+  glVertexAttribPointer (Vertex_Info_Position_Location, Vertex_Info_Position_Count, Vertex_Info_Position_Type, GL_FALSE, Vertex_Info_Size, (const GLvoid *)Vertex_Info_Position_Offset);
+  glEnableVertexAttribArray (Vertex_Info_Color_Location);
+  glVertexAttribPointer (Vertex_Info_Color_Location, Vertex_Info_Color_Count, Vertex_Info_Color_Type, GL_TRUE, Vertex_Info_Size, (const GLvoid *)Vertex_Info_Color_Offset);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
   glBufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof(vertex_indices), vertex_indices, GL_STATIC_DRAW);
@@ -426,11 +432,11 @@ int main (int argc, char** argv)
     Register_Input (main_window, Key_States);
     Handle_Input (Key_States, Position);
 
-    Agl_Float_Matrix_Make_Perspective (mat_perspective, 90.0f, 1.0f, 0.1f, 100.0f);
-    //Agl_Float_Matrix_Make_Identity (4, mat_perspective);
-    Agl_Float_Matrix_Make_Translation (mat_view, Position[0], Position[1], Position[2]);
-    Agl_Float_Matrix_Product (4, mat_perspective, mat_view, transformation);
-    Agl_Print_Float_Matrix (transformation, 4);
+    LED_GLfloat_Matrix_Make_Perspective (mat_perspective, 90.0f, 1.0f, 0.1f, 100.0f);
+    //LED_GLfloat_Matrix_Make_Identity (4, mat_perspective);
+    LED_GLfloat_Matrix_Make_Translation (mat_view, Position[0], Position[1], Position[2]);
+    LED_GLfloat_Matrix_Product (4, mat_perspective, mat_view, transformation);
+    LED_Print_Float_Matrix (transformation, 4);
     printf ("\n");
 
     glUniformMatrix4fv (transformation_location, 1, GL_FALSE, transformation);
