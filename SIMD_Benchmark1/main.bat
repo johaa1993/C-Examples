@@ -1,6 +1,5 @@
-del "bin\main.exe"
-:: gcc src\main.c -std=gnu99 -lpthread -obin/main
-gcc src\main2.c -obin/main
+del "bin/main.exe"
+gcc -o bin/main src/main3.c src/Timer.c
 cd bin
 main
 
