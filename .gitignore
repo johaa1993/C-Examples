@@ -1,1 +1,14 @@
 *.exe
+*.pdf
+*.hex
+*.elf
+*.eep
+*.lss
+*.mk
+*.srec
+*.d
+*.o
+*.cproj
+*.atsln
+*.atsuo
+*.map
