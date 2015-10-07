@@ -31,8 +31,8 @@ void Conventional_Add_Vector_Scalar (int Count, float * A, float B, float * Resu
 
 
 
-#define Vector_Count 10000
-#define Test_Count 10000
+#define Vector_Count 1000
+#define Test_Count 1000000
 
 int main (int argc, char** argv)
 {
@@ -49,8 +49,8 @@ int main (int argc, char** argv)
   CPU_Time_0 = Get_CPU_Time ();
   for (int i = 0; i < Test_Count; i++)
   {
-    //SIMD_Add_Vector_Scalar (COUNT, Data, 10.0f, Result);
-    Conventional_Add_Vector_Scalar (Vector_Count, Data, 10.0f, Result);
+    SIMD_Add_Vector_Scalar (Vector_Count, Data, 10.0f, Result);
+    //Conventional_Add_Vector_Scalar (Vector_Count, Data, 10.0f, Result);
   }
   Wall_Time_1 = Get_Wall_Time ();
   CPU_Time_1 = Get_CPU_Time ();
