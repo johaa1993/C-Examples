@@ -107,12 +107,12 @@ void Display_Init ()
 	dip204_set_cursor_position(1,1);
 }
 
-
+#define Sensor_Queue_Count 6
 xQueueHandle Sensor_Queue;
 
 struct Sensor_Message
 {
-	char Text[20];
+	char Text[10];
 	unsigned char Row;
 };
 
@@ -132,6 +132,7 @@ struct Sensor_Config
 
 void Sensor_Task_Function (void * Parameters)
 {
+	usart_write_line (configDBG_USART, "Sensor_Task_Function\n");
 	struct Sensor_Config * Config = (struct Sensor_Config *) Parameters;
 	struct Sensor_Message Message_1;
 	struct Sensor_Message * Message = &Message_1;
@@ -139,7 +140,7 @@ void Sensor_Task_Function (void * Parameters)
 	for (;;)
 	{
 		adc_start (Config->ADC);
-		sprintf (Message->Text, Config->Format, adc_get_value(Config->ADC, Config->Channel));
+		sprintf (Message->Text, Config->Format, adc_get_value (Config->ADC, Config->Channel));
 		if (xQueueSendToFront (Config->Queue, &Message, Config->Delay) == pdPASS)
 		{
 			gpio_clr_gpio_pin (Config->LED);
@@ -149,6 +150,7 @@ void Sensor_Task_Function (void * Parameters)
 			gpio_set_gpio_pin (Config->LED);
 		}
 		vTaskDelay (Config->Delay);
+		gpio_tgl_gpio_pin (LED7_GPIO);
 	}
 	vTaskDelete (NULL);
 }
@@ -165,6 +167,7 @@ struct Presentation_Config
 
 void Presentation_Task_Function (void * Parameters)
 {
+	usart_write_line (configDBG_USART, "Presentation_Task_Function\n");
 	struct Presentation_Config * Config = (struct Presentation_Config *) Parameters;
 	struct Sensor_Message * Message;
 	for (;;)
@@ -179,6 +182,7 @@ void Presentation_Task_Function (void * Parameters)
 		{
 			gpio_set_gpio_pin (Config->LED);
 		}
+		gpio_tgl_gpio_pin (LED5_GPIO);
 		vTaskDelay (Config->Delay);
 	}
 	vTaskDelete (NULL);
@@ -190,9 +194,16 @@ int main()
 	USART_Init ();
 	usart_write_line (configDBG_USART, "USART is ready\n");
 
+	adc_configure (&AVR32_ADC);
+	adc_enable (&AVR32_ADC, ADC_POTENTIOMETER_CHANNEL);
+	adc_enable (&AVR32_ADC, ADC_LIGHT_CHANNEL);
+	adc_enable (&AVR32_ADC, ADC_TEMPERATURE_CHANNEL);
+
 	Display_Init ();
 	usart_write_line (configDBG_USART, "Display_Init is ready\n");
 
+	
+	Sensor_Queue = xQueueCreate (Sensor_Queue_Count, sizeof (struct Sensor_Message));
 
 	struct Sensor_Config Light_Config = {.ADC = &AVR32_ADC, .Queue = Sensor_Queue, .Timeout = 10, .Delay = 10, .Channel = ADC_LIGHT_CHANNEL, .Row = 1, .Format = "Lum %04lu"};
 	struct Sensor_Config Temperature_Config = {.ADC = &AVR32_ADC, .Queue = Sensor_Queue, .Timeout = 10, .Delay = 10, .Channel = ADC_TEMPERATURE_CHANNEL, .Row = 2, .Format = "Tmp %04lu"};
@@ -201,8 +212,8 @@ int main()
 		
 	xTaskCreate (Presentation_Task_Function, "Pre", configMINIMAL_STACK_SIZE, &Presentation_Config_1, tskIDLE_PRIORITY + 1, &Presentation_Config_1.Handle);
 	xTaskCreate (Sensor_Task_Function, "Lum", configMINIMAL_STACK_SIZE, &Light_Config, tskIDLE_PRIORITY + 1, &Light_Config.Handle);
-	xTaskCreate (Sensor_Task_Function, "Lum", configMINIMAL_STACK_SIZE, &Temperature_Config, tskIDLE_PRIORITY + 1, &Light_Config.Handle);
-	xTaskCreate (Sensor_Task_Function, "Lum", configMINIMAL_STACK_SIZE, &Potentiometer_Config, tskIDLE_PRIORITY + 1, &Light_Config.Handle);
+	xTaskCreate (Sensor_Task_Function, "Tmp", configMINIMAL_STACK_SIZE, &Temperature_Config, tskIDLE_PRIORITY + 1, &Light_Config.Handle);
+	xTaskCreate (Sensor_Task_Function, "Pot", configMINIMAL_STACK_SIZE, &Potentiometer_Config, tskIDLE_PRIORITY + 1, &Light_Config.Handle);
 	
 
 	vTaskStartScheduler ();
