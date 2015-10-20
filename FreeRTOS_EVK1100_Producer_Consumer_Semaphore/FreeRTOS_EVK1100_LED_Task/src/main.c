@@ -12,6 +12,7 @@ Make the various task output their actions to the serial port.
 #include "gpio.h"
 #include "pm.h"
 #include "usart.h"
+#include "semphr.h"
 
  #define configDBG 1
  #define configDBG_USART (&AVR32_USART0)
@@ -72,12 +73,13 @@ Byte Byte_Buffer[Byte_Buffer_Count];
 
 Byte Produce_Byte ()
 {
+	vTaskDelay (100 + (rand() % 1050));
 	return 1;
 }
 
-Byte Consume_Byte (Byte * Buffer)
+Byte Consume_Byte (Byte B)
 {
-	Buffer[Byte_Buffer_Last] = 0;
+	vTaskDelay (100 + (rand() % 1000));
 }
 
 void Byte_Buffer_Put (Byte B, Byte * Buffer)
@@ -85,12 +87,19 @@ void Byte_Buffer_Put (Byte B, Byte * Buffer)
 	Buffer[Byte_Buffer_Last] = B;
 }
 
+Byte Byte_Buffer_Pull (Byte * Buffer)
+{
+	return Buffer[Byte_Buffer_Last];
+}
 
+
+
+xSemaphoreHandle Semaphore;
 
 xTaskHandle Producer_Task_Handle;
 xTaskHandle Consumer_Task_Handle;
 
-void Producer_Task_Function (void *Parameters)
+void Producer_Task_Function (void * Parameters)
 {
 	for (;;)
 	{
@@ -100,13 +109,16 @@ void Producer_Task_Function (void *Parameters)
 		{
 			vTaskSuspend (Producer_Task_Handle);
 		}
+		
+		while (xSemaphoreTake (Semaphore, 0) != pdPASS);
 		Byte_Buffer_Put (Byte_Buffer, B);
 		Byte_Buffer_Last = Byte_Buffer_Last + 1;
+		xSemaphoreGive (Semaphore);
+		
 		if (Byte_Buffer_Last == 1)
 		{
 			vTaskResume (Consumer_Task_Handle);
 		}
-		vTaskDelay (100 + (rand() % 1050));
 	}
 	vTaskDelete (NULL);
 }
@@ -124,13 +136,15 @@ void Consumer_Task_Function (void *Parameters)
 			vTaskDelay (1 + (rand() % 100));
 			vTaskSuspend (Consumer_Task_Handle);
 		}
+		while (xSemaphoreTake (Semaphore, 0) != pdPASS);
+		Byte B = Byte_Buffer_Pull (Byte_Buffer);
 		Byte_Buffer_Last = Byte_Buffer_Last - 1;
+		xSemaphoreGive (Semaphore);
 		if (Byte_Buffer_Last == Byte_Buffer_Count - 1)
 		{
 			vTaskResume (Producer_Task_Handle);
 		}
-		Consume_Byte (Byte_Buffer);
-		vTaskDelay (100 + (rand() % 1000));
+		Consume_Byte (B);
 	}
 	vTaskDelete (NULL);
 }
@@ -143,6 +157,12 @@ int main()
 
 	USART_printf (configDBG_USART, "USART is ready\n");
 
+	vSemaphoreCreateBinary (Semaphore);
+	if (Semaphore == NULL)
+	{
+		USART_printf (configDBG_USART, "vSemaphoreCreateBinary failed\n");
+		for(;;);
+	}
 	xTaskCreate (Producer_Task_Function, "Producer_Task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &Producer_Task_Handle);
 	xTaskCreate (Consumer_Task_Function, "Consumer_Task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &Consumer_Task_Handle);
 	
