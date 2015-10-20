@@ -93,7 +93,7 @@ void Display_Init ()
 
 	// Enable the SPI peripheral on GPIO pins
 	gpio_enable_module(DIP204_SPI_GPIO_MAP,
-	sizeof(DIP204_SPI_GPIO_MAP) / 	sizeof(DIP204_SPI_GPIO_MAP[0]));
+	sizeof(DIP204_SPI_GPIO_MAP) / sizeof(DIP204_SPI_GPIO_MAP[0]));
 
 	// Initialize as SPI master
 	spi_initMaster(DIP204_SPI, &spiOptions);
@@ -132,7 +132,9 @@ struct Sensor_Config
 
 void Sensor_Task_Function (void * Parameters)
 {
+	taskENTER_CRITICAL ();
 	usart_write_line (configDBG_USART, "Sensor_Task_Function\n");
+	taskEXIT_CRITICAL ();
 	struct Sensor_Config * Config = (struct Sensor_Config *) Parameters;
 	struct Sensor_Message Message_1;
 	struct Sensor_Message * Message = &Message_1;
@@ -143,13 +145,13 @@ void Sensor_Task_Function (void * Parameters)
 		sprintf (Message->Text, Config->Format, adc_get_value (Config->ADC, Config->Channel));
 		if (xQueueSendToFront (Config->Queue, &Message, Config->Delay) == pdPASS)
 		{
-			gpio_clr_gpio_pin (Config->LED);
+			gpio_set_gpio_pin (Config->LED);
 		}
 		else
 		{
-			gpio_set_gpio_pin (Config->LED);
+			gpio_clr_gpio_pin (Config->LED);
 		}
-		vTaskDelay (Config->Delay);
+		vTaskDelay (rand () % Config->Delay);
 		gpio_tgl_gpio_pin (LED7_GPIO);
 	}
 	vTaskDelete (NULL);
@@ -167,23 +169,25 @@ struct Presentation_Config
 
 void Presentation_Task_Function (void * Parameters)
 {
+	taskENTER_CRITICAL ();
 	usart_write_line (configDBG_USART, "Presentation_Task_Function\n");
+	taskEXIT_CRITICAL ();
 	struct Presentation_Config * Config = (struct Presentation_Config *) Parameters;
 	struct Sensor_Message * Message;
 	for (;;)
 	{
 		if (xQueueReceive (Config->Queue, &Message, Config->Delay) == pdPASS)
 		{
-			gpio_clr_gpio_pin (Config->LED);
+			gpio_set_gpio_pin (Config->LED);
 			dip204_set_cursor_position (1, Message->Row);
 			dip204_write_string (Message->Text);
 		}
 		else
 		{
-			gpio_set_gpio_pin (Config->LED);
+			gpio_clr_gpio_pin (Config->LED);
 		}
 		gpio_tgl_gpio_pin (LED5_GPIO);
-		vTaskDelay (Config->Delay);
+		vTaskDelay (rand () % Config->Delay);
 	}
 	vTaskDelete (NULL);
 }
@@ -205,10 +209,10 @@ int main()
 	
 	Sensor_Queue = xQueueCreate (Sensor_Queue_Count, sizeof (struct Sensor_Message));
 
-	struct Sensor_Config Light_Config = {.ADC = &AVR32_ADC, .Queue = Sensor_Queue, .Timeout = 10, .Delay = 10, .Channel = ADC_LIGHT_CHANNEL, .Row = 1, .Format = "Lum %04lu"};
-	struct Sensor_Config Temperature_Config = {.ADC = &AVR32_ADC, .Queue = Sensor_Queue, .Timeout = 10, .Delay = 10, .Channel = ADC_TEMPERATURE_CHANNEL, .Row = 2, .Format = "Tmp %04lu"};
-	struct Sensor_Config Potentiometer_Config = {.ADC = &AVR32_ADC, .Queue = Sensor_Queue, .Timeout = 10, .Delay = 10, .Channel = ADC_POTENTIOMETER_CHANNEL, .Row = 3, .Format = "Pot %04lu"};
-	struct Presentation_Config Presentation_Config_1 = {.Queue = Sensor_Queue, .Timeout = 10, .Delay = 10, .LED = LED0_GPIO};
+	struct Sensor_Config Light_Config = {.ADC = &AVR32_ADC, .Queue = Sensor_Queue, .Timeout = 10, .Delay = 50, .Channel = ADC_LIGHT_CHANNEL, .Row = 1, .Format = "Lum %04lu", .LED = LED1_GPIO};
+	struct Sensor_Config Temperature_Config = {.ADC = &AVR32_ADC, .Queue = Sensor_Queue, .Timeout = 10, .Delay = 50, .Channel = ADC_TEMPERATURE_CHANNEL, .Row = 2, .Format = "Tmp %04lu", .LED = LED2_GPIO};
+	struct Sensor_Config Potentiometer_Config = {.ADC = &AVR32_ADC, .Queue = Sensor_Queue, .Timeout = 10, .Delay = 50, .Channel = ADC_POTENTIOMETER_CHANNEL, .Row = 3, .Format = "Pot %04lu", .LED = LED3_GPIO};
+	struct Presentation_Config Presentation_Config_1 = {.Queue = Sensor_Queue, .Timeout = 10, .Delay = 20, .LED = LED0_GPIO};
 		
 	xTaskCreate (Presentation_Task_Function, "Pre", configMINIMAL_STACK_SIZE, &Presentation_Config_1, tskIDLE_PRIORITY + 1, &Presentation_Config_1.Handle);
 	xTaskCreate (Sensor_Task_Function, "Lum", configMINIMAL_STACK_SIZE, &Light_Config, tskIDLE_PRIORITY + 1, &Light_Config.Handle);
