@@ -3,23 +3,26 @@
 
 double Get_Wall_Time ()
 {
-    LARGE_INTEGER time,freq;
-    if (!QueryPerformanceFrequency(&freq)){
-        //  Handle error
-        return 0;
-    }
-    if (!QueryPerformanceCounter(&time)){
-        //  Handle error
-        return 0;
-    }
-    return (double)time.QuadPart / freq.QuadPart;
+  LARGE_INTEGER time;
+  LARGE_INTEGER freq;
+  if (!QueryPerformanceFrequency (&freq))
+  {
+    //Handle error
+    return 0;
+  }
+  if (!QueryPerformanceCounter (&time))
+  {
+    //Handle error
+    return 0;
+  }
+  return (double)time.QuadPart / freq.QuadPart;
 }
 
 
 double Get_CPU_Time()
 {
   FILETIME a,b,c,d;
-  if (GetProcessTimes (GetCurrentProcess(), &a, &b, &c, &d) != 0)
+  if (GetProcessTimes (GetCurrentProcess (), &a, &b, &c, &d) != 0)
   {
     double T;
     T = (double)(d.dwLowDateTime | ((unsigned long long)d.dwHighDateTime << 32)) * 0.0000001;
@@ -36,7 +39,6 @@ double Get_CPU_Time()
 
 #include <time.h>
 #include <sys/time.h>
-
 
 double Get_Wall_Time()
 {
