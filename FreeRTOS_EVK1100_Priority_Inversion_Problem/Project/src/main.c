@@ -75,9 +75,16 @@ struct Task_Config
 	xTaskHandle Handle;
 	pdTASK_CODE Function;
 	unsigned short Stack_Depth;
+	xSemaphoreHandle Semaphore;
+	portTickType Semaphore_Timeout;
+	portTickType Work;
+	portTickType Deadline;
 };
 
-
+struct Task_Config Task_Config_0;
+struct Task_Config Task_Config_1;
+struct Task_Config Task_Config_2;
+xSemaphoreHandle Semaphore_0;
 
 
 void Task_Create (struct Task_Config * Config)
@@ -86,30 +93,49 @@ void Task_Create (struct Task_Config * Config)
 }
 
 
-xSemaphoreHandle Semaphore_0;
+
 
 void Task_Function_0 (void * Arguments)
 {
 	struct Task_Config * Config = (struct Task_Config *) Arguments;
 	vTaskDelay (Config->Start_Delay);
-	USART_printf_critical (configDBG_USART, "Task %s started\n", Config->Name);
-	while (1)
+	USART_printf_critical (configDBG_USART, "Task %s starts\n", Config->Name);
+	
+	portTickType Block_Count = xTaskGetTickCount();
+	if (xSemaphoreTake (Config->Semaphore, Config->Semaphore_Timeout) == pdTRUE)
 	{
-		//vTaskDelay (100);
-		
-		if (xSemaphoreTake( Semaphore_0, 10 ) == pdTRUE)
+		USART_printf_critical (configDBG_USART, "Task %s takes Semaphore\n", Config->Name);
+		portTickType Count = xTaskGetTickCount();
+		while (xTaskGetTickCount() - Count < Config->Work){} // Work
+		portTickType Delta = xTaskGetTickCount() - Block_Count;
+		USART_printf_critical (configDBG_USART, "Task %s worked for %i ticks\n", Config->Name, Delta);
+		if (Delta > Config->Deadline)
 		{
-			USART_printf_critical (configDBG_USART, "Task %s has taken the Semaphore_0\n", Config->Name);
+			USART_printf_critical (configDBG_USART, "Task %s failed deadline\n", Config->Name);
 		}
-		
+		else
+		{
+			USART_printf_critical (configDBG_USART, "Task %s within deadline\n", Config->Name);
+		}
+		USART_printf_critical (configDBG_USART, "Task %s gives Semaphore\n", Config->Name);
+		xSemaphoreGive (Config->Semaphore);
 	}
+
+}
+
+void Task_Function_B (void * Arguments)
+{
+	struct Task_Config * Config = (struct Task_Config *) Arguments;
+	vTaskDelay (Config->Start_Delay);
+	USART_printf_critical (configDBG_USART, "Task %s started\n", Config->Name);
+	portTickType Count = xTaskGetTickCount();
+	while (xTaskGetTickCount() - Count < Config->Work){}  // Work
+	USART_printf_critical (configDBG_USART, "Task %s work is done\n", Config->Name);
+	vTaskSuspend (NULL);
 }
 
 
 
-struct Task_Config Task_Config_0;
-struct Task_Config Task_Config_1;
-struct Task_Config Task_Config_2;
 
 
 int main()
@@ -122,31 +148,50 @@ int main()
 	
 	{
 		struct Task_Config * Config = &Task_Config_0;
-		Config->Start_Delay = 1000;
+		Config->Start_Delay = 0;
 		Config->Handle = NULL;
 		Config->Priority = 1;
-		Config->Name = "Task A";
+		Config->Name = "A";
 		Config->Function = Task_Function_0;
 		Config->Stack_Depth = configMINIMAL_STACK_SIZE;
+		Config->Semaphore = Semaphore_0;
+		Config->Semaphore_Timeout = 10000;
+		Config->Work = 100;
+		Config->Deadline = 8000;
 		Task_Create (Config);
 	}
+	
 	
 	{
 		struct Task_Config * Config = &Task_Config_1;
-		Config->Start_Delay = 1000;
+		Config->Start_Delay = 10;
 		Config->Handle = NULL;
 		Config->Priority = 2;
-		Config->Name = "Task B";
+		Config->Name = "B";
+		Config->Function = Task_Function_B;
+		Config->Stack_Depth = configMINIMAL_STACK_SIZE;
+		Config->Work = 5000;
+		Task_Create (Config);
+	}
+	
+	
+	{
+		struct Task_Config * Config = &Task_Config_2;
+		Config->Start_Delay = 10;
+		Config->Handle = NULL;
+		Config->Priority = 3;
+		Config->Name = "C";
 		Config->Function = Task_Function_0;
 		Config->Stack_Depth = configMINIMAL_STACK_SIZE;
+		Config->Semaphore = Semaphore_0;
+		Config->Semaphore_Timeout = 10000;
+		Config->Work = 100;
+		Config->Deadline = 150;
 		Task_Create (Config);
 	}
 
 	
 	
-
-	
 	gpio_clr_gpio_pin (LED4_GPIO);
-	
 	vTaskStartScheduler ();
 }
