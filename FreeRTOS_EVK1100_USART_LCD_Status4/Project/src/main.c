@@ -32,8 +32,6 @@ static void Task_Create (struct Task_Configuration * Config)
 	xTaskCreate (Config->Function, Config->Name, Config->Depth, Config, tskIDLE_PRIORITY + Config->Priority, &Config->Handle);
 }
 
-#define Task_Count 2
-struct Task_Configuration Task_Config[Task_Count];
 
 #define USART_0_Queue_Count 10
 static xQueueHandle USART_0_Queue;
@@ -68,9 +66,6 @@ static void DIP204_Initialize ()
 		.spi_mode             = 0,
 		.modfdis              = 1
 	};
-	pm_enable_osc0_crystal (&AVR32_PM, FOSC0);
-	pm_enable_clk0 (&AVR32_PM, OSC0_STARTUP);
-	pm_switch_to_clock (&AVR32_PM, AVR32_PM_MCSEL_OSC0);
 	delay_init (12000000);
 	delay_ms (1);
 	gpio_enable_module (DIP204_SPI_GPIO_MAP, sizeof(DIP204_SPI_GPIO_MAP) / sizeof(DIP204_SPI_GPIO_MAP[0]));
@@ -104,7 +99,7 @@ static void USART_Initialize ()
 		gpio_enable_module(USART_GPIO_MAP, sizeof(USART_GPIO_MAP) / sizeof(USART_GPIO_MAP[0]));
 		usart_init_rs232 (&AVR32_USART0, &USART_OPTIONS, FOSC0);
 		(&AVR32_USART0)->cr |= AVR32_USART_CR_RXDIS_MASK | AVR32_USART_CR_TXDIS_MASK;
-		//INTC_init_interrupts ();
+		INTC_init_interrupts ();
 		INTC_register_interrupt (&USART_0_Interrupt, AVR32_USART0_IRQ, AVR32_INTC_INT0);
 		(&AVR32_USART0)->ier = AVR32_USART_IER_RXRDY_MASK;
 		(&AVR32_USART0)->cr |= AVR32_USART_CR_TXEN_MASK | AVR32_USART_CR_RXEN_MASK;
@@ -112,7 +107,6 @@ static void USART_Initialize ()
 	portEXIT_CRITICAL();
 	USART_0_Queue = xQueueCreate (USART_0_Queue_Count, sizeof(int));
 }
-
 
 static void USART_0_Interrupt (void)
 {
@@ -137,11 +131,15 @@ signed portBASE_TYPE USART_0_Interrupt_Magic()
 }
 
 
+struct DIP204_Message
+{
+	unsigned char Row;
+	unsigned char Column;
+	char Text[20];
+};
+struct DIP204_Message DIP204_Message_Array[2];
 
-
-
-
-
+static xQueueHandle DIP204_Queue;
 
 
 void Task_0_Function (void * Arguments)
@@ -153,19 +151,69 @@ void Task_0_Function (void * Arguments)
 	}
 }
 
-
 void Task_Visual_Function (void * Arguments)
 {
-	int C;
+	struct DIP204_Message * Message = &DIP204_Message_Array[0];
 	while (1)
 	{
-		gpio_tgl_gpio_pin (LED1_GPIO);
-        while (xQueueReceive (USART_0_Queue, &C, 0))
+        while (xQueueReceive (DIP204_Queue, &Message, 0))
         {
-			vTaskDelay (100);
-			dip204_write_data (C);
+			dip204_set_cursor_position (Message->Column, Message->Row);
+	        dip204_write_string (Message->Text);
         }
-		vTaskDelay (500);
+		vTaskDelay (1000);
+		gpio_tgl_gpio_pin (LED1_GPIO);
+	}
+}
+
+void Task_Status_Function (void * Arguments)
+{
+	struct DIP204_Message * Message = &DIP204_Message_Array[0];
+	Message->Column = 1;
+	Message->Row = 2;
+	portBASE_TYPE Tick_Count = 0;
+	while (1)
+	{
+		if (gpio_get_pin_value(GPIO_PUSH_BUTTON_0) == GPIO_PUSH_BUTTON_0_PRESSED)
+		{
+			Tick_Count = xTaskGetTickCount () + 10000;
+		}
+		if (Tick_Count > xTaskGetTickCount ())
+		{
+			sprintf (Message->Text, "Message count %i", uxQueueMessagesWaiting (USART_0_Queue));
+		}
+		else
+		{
+			sprintf (Message->Text, "               ");
+		}
+		xQueueSendToBack (DIP204_Queue, &Message, 0);
+		gpio_tgl_gpio_pin (LED2_GPIO);
+		vTaskDelay (100);
+	}
+}
+
+void Task_Display_USART_Queue_Function (void * Arguments)
+{
+	struct DIP204_Message * Message = &DIP204_Message_Array[1];
+	int Index = 0;
+	int Character;
+	while (1)
+	{
+		while (xQueueReceive (USART_0_Queue, &Character, 0))
+		{
+			Message->Column = 1;
+			Message->Row = 1;
+			Message->Text[Index] = Character;
+			Index = Index + 1;
+			xQueueSendToBack (DIP204_Queue, &Message, 10);
+			vTaskDelay (300);
+			if (Index == USART_0_Queue_Count)
+			{
+				Index = 0;
+			}
+		}
+		vTaskDelay (1000);
+		gpio_tgl_gpio_pin (LED3_GPIO);
 	}
 }
 
@@ -173,38 +221,56 @@ void Task_Visual_Function (void * Arguments)
 
 
 
+#define Task_Count 4
+struct Task_Configuration Task_Config[Task_Count] = 
+{
+	{
+		.Function = Task_0_Function,
+		.Name = "0",
+		.Priority = 4,
+		.Depth = 512
+	},
+	{
+		.Function = Task_Visual_Function,
+		.Name = "Visual",
+		.Priority = 4,
+		.Depth = 512
+	},
+	{
+		.Function = Task_Status_Function,
+		.Name = "Status",
+		.Priority = 4,
+		.Depth = 512
+	},
+	{
+		.Function = Task_Display_USART_Queue_Function,
+		.Name = "USART_Queue",
+		.Priority = 4,
+		.Depth = 512
+	}
+};
+
 
 int main(void)
 {
+	
+	pm_enable_osc0_crystal (&AVR32_PM, FOSC0);
+	pm_enable_clk0 (&AVR32_PM, OSC0_STARTUP);
+	pm_switch_to_clock (&AVR32_PM, AVR32_PM_MCSEL_OSC0);
+	
 	USART_Initialize ();
-	usart_write_line (&AVR32_USART0, "USART initialized\n");
 	DIP204_Initialize ();
+	
+	usart_write_line (&AVR32_USART0, "USART initialized\n");
 	usart_write_line (&AVR32_USART0, "DIP204 initialized\n");
 	
 	
-
-	if (1)
-	{
-		struct Task_Configuration * Config = &Task_Config[0];
-		Config->Handle = NULL;
-		Config->Priority = 4;
-		Config->Name = "0";
-		Config->Function = Task_0_Function;
-		Config->Depth = 512;
-		Task_Create (Config);
-	}
+	DIP204_Queue = xQueueCreate (10, sizeof(struct DIP204_Message));
 	
-	if (1)
+	for (int I = 0; I < Task_Count; I = I + 1)
 	{
-		struct Task_Configuration * Config = &Task_Config[1];
-		Config->Handle = NULL;
-		Config->Priority = 4;
-		Config->Name = "Visual";
-		Config->Function = Task_Visual_Function;
-		Config->Depth = 512;
-		Task_Create (Config);
+		Task_Create (&Task_Config[I]);
 	}
-	
 	vTaskStartScheduler ();
 	
 	while(1){}
