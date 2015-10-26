@@ -35,15 +35,16 @@ void SIMD_128_Array_Set_All (int Count, float * A, __m128 * R)
 
 void SIMD_Matrix_4_Multiplicate (float * A, float * B, float * R)
 {
-  __m128 A_Vector_Array[4];
-  __m128 B_Vector_Array[4];
-  SIMD_128_Array_Load (4, B, B_Vector_Array);
+  __m128 AA[4];
+  __m128 BB[4];
+  #define Result BB[0]
+  SIMD_128_Array_Load (4, B, BB);
   for (int I = 0; I < 16; I = I + 4)
   {
-    SIMD_128_Array_Set_All (4, A + I, A_Vector_Array);
-    SIMD_128_Array_Multiplcate (4, A_Vector_Array, B_Vector_Array, A_Vector_Array);
-    A_Vector_Array[0] = SIMD_128_Sum_4 (A_Vector_Array);
-    _mm_store_ps (&R[I], A_Vector_Array[0]);
+    SIMD_128_Array_Set_All (4, A + I, AA);
+    SIMD_128_Array_Multiplcate (4, AA, BB, AA);
+    Result = SIMD_128_Sum_4 (AA);
+    _mm_store_ps (&R[I], Result);
   }
   printf ("End:\n");
   getchar();

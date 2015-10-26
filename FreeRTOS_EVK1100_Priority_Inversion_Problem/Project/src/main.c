@@ -120,7 +120,7 @@ void Task_Function_0 (void * Arguments)
 		USART_printf_critical (configDBG_USART, "Task %s gives Semaphore\n", Config->Name);
 		xSemaphoreGive (Config->Semaphore);
 	}
-
+	//vTaskSuspend (NULL);
 }
 
 void Task_Function_B (void * Arguments)
