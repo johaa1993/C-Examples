@@ -53,7 +53,7 @@ void Init_USART ()
 
 void USART_printf_critical (volatile avr32_usart_t * usart, const char * format, ...)
 {
-	taskENTER_CRITICAL();
+	taskENTER_CRITICAL ();
 	#define Buffer_Size 100
 	char buffer[Buffer_Size] = {'\0'};
 	va_list args;
@@ -62,7 +62,7 @@ void USART_printf_critical (volatile avr32_usart_t * usart, const char * format,
 	va_end (args);
 	usart_write_line (usart, buffer);
 	#undef Buffer_Size
-	taskEXIT_CRITICAL();
+	taskEXIT_CRITICAL ();
 };
 
 
@@ -186,7 +186,7 @@ int main()
 		Config->Semaphore = Semaphore_0;
 		Config->Semaphore_Timeout = 10000;
 		Config->Work = 100;
-		Config->Deadline = 150;
+		Config->Deadline = 200;
 		Task_Create (Config);
 	}
 

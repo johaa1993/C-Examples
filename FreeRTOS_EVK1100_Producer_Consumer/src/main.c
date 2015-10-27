@@ -64,6 +64,7 @@ void Producer_Task_Function (void * Parameters)
 			vTaskSuspend (NULL);
 		}
 		Item_Store (X);
+		//Item_Buffer_Last = 2
 		if (Item_Buffer_Last == 1)
 		{
 			vTaskResume (Consumer_Task_Handle);

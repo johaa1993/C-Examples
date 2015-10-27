@@ -18,19 +18,7 @@
 #include "gpio.h"
 #include "usart.h"
 
-struct Task_Configuration
-{
-	char * Name;
-	int Priority;
-	xTaskHandle Handle;
-	pdTASK_CODE Function;
-	unsigned short Depth;
-};
 
-static void Task_Create (struct Task_Configuration * Config)
-{
-	xTaskCreate (Config->Function, Config->Name, Config->Depth, Config, tskIDLE_PRIORITY + Config->Priority, &Config->Handle);
-}
 
 #define USART_0_Queue_Count 20
 static xQueueHandle USART_0_Queue;
@@ -289,35 +277,6 @@ void Task_Display_USART_Queue_Function (void * Arguments)
 }
 
 
-#define Task_Config_Array_Count 4
-
-struct Task_Configuration Task_Config_Array[Task_Config_Array_Count] =
-{
-	{
-		.Function = Task_0_Function,
-		.Name = "0",
-		.Priority = 4,
-		.Depth = 512
-	},
-	{
-		.Function = Task_Visual_Function,
-		.Name = "Visual",
-		.Priority = 4,
-		.Depth = 512
-	},
-	{
-		.Function = Task_Status_Function,
-		.Name = "Status",
-		.Priority = 4,
-		.Depth = 512
-	},
-	{
-		.Function = Task_Display_USART_Queue_Function,
-		.Name = "USART_Queue",
-		.Priority = 4,
-		.Depth = 512
-	}
-};
 
 
 int main(void)
@@ -333,13 +292,10 @@ int main(void)
 	usart_write_line (&AVR32_USART0, "USART initialized\n");
 	usart_write_line (&AVR32_USART0, "DIP204 initialized\n");
 
-
-
-
-	for (int I = 0; I < Task_Config_Array_Count; I = I + 1)
-	{
-		Task_Create (&Task_Config_Array[I]);
-	}
+	xTaskCreate (Task_0_Function, "0", 512, NULL, tskIDLE_PRIORITY + 1, NULL);
+	xTaskCreate (Task_Visual_Function, "Visual", 512, NULL, tskIDLE_PRIORITY + 1, NULL);
+	xTaskCreate (Task_Status_Function, "Status", 512, NULL, tskIDLE_PRIORITY + 1, NULL);
+	xTaskCreate (Task_Display_USART_Queue_Function, "USART_Queue", 512, NULL, tskIDLE_PRIORITY + 1, NULL);
 
 	vTaskStartScheduler ();
 
