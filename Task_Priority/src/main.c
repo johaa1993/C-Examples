@@ -13,17 +13,17 @@
 struct BRS_Task_Handler
 {
   int Context_X;
-  struct BRS_List_CDLL_Node Node;
+  struct BRS_Lists_DL_Node Node;
   float Context_Y;
   size_t Priority;
   signed volatile long Context_Z;
 };
 
-#define BRS_Task_Handler_Iterator_Entry(Iterator) BRS_List_CDLL_Node_Entry (Iterator, struct BRS_Task_Handler, Node)
+#define BRS_Task_Handler_Iterator_Entry(Iterator) BRS_Lists_DL_Node_Entry (Iterator, struct BRS_Task_Handler, Node)
 
 
 struct BRS_Schedule_PT    Schedule;
-struct BRS_List_CDLL_Node Schedule_Nodes [10];
+struct BRS_Lists_DL_Node Schedule_Nodes [10];
 struct BRS_Task_Handler   Handlers [10];
 
 
@@ -48,13 +48,13 @@ int main (int argc, char** argv)
   BRS_Schedule_PT_Insert (&Handlers[5].Node, Handlers[5].Priority, &Schedule);
   BRS_Schedule_PT_Insert (&Handlers[6].Node, Handlers[6].Priority, &Schedule);
 
-  struct BRS_List_CDLL_Node * Node;
+  struct BRS_Lists_DL_Node * Node;
   struct BRS_Task_Handler * Handler;
 
   for (;;)
   {
     Node = BRS_Schedule_PT_Pull (&Schedule);
-    if (Node == &Schedule.List [Schedule.Priority]) break;
+    if (Node == &Schedule.List_Array [Schedule.Priority]) break;
     Handler = BRS_Task_Handler_Iterator_Entry (Node);
     printf("Priority %i\n", Handler->Priority);
     getchar();
