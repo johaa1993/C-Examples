@@ -78,6 +78,19 @@ static inline void BRS_Lists_DL_Remove
 }
 
 
+//TODO: check circularity
+static inline void BRS_Lists_DL_Looped_Right
+(struct BRS_Lists_DL_Node * Item)
+{
+  struct BRS_Lists_DL_Node * Iterator;
+  Iterator = Item;
+  for (;;)
+  {
+    Iterator = Iterator->Next;
+    if (Iterator == Item) break;
+  }
+}
+
 
 
 #endif

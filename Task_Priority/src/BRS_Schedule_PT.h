@@ -20,6 +20,7 @@ static inline void BRS_Schedule_PT_Initialize (struct BRS_Lists_DL_Node * List_A
 
 
 
+
 //Insert task handler <Item> into <Schedule>.
 //Calulates new highest priority if nesseracy.
 static inline void BRS_Schedule_PT_Insert
@@ -35,8 +36,7 @@ static inline void BRS_Schedule_PT_Insert
     Schedule->Priority = Priority;
   }
 
-  //Insert the new node item at the respective priority slot.
-  BRS_Lists_DL_Insert_After (Item, &Schedule->List_Array [Priority]);
+  BRS_Lists_DL_Insert_After (Item, Schedule->List_Array + Priority);
 }
 
 
@@ -49,26 +49,21 @@ static inline void BRS_Schedule_PT_Insert
 //Calulates new highest priority if nesseracy.
 static inline struct BRS_Lists_DL_Node * BRS_Schedule_PT_Pull (struct BRS_Schedule_PT * Schedule)
 {
-  //Node can be anything.
-  //It's just a location for the memory of interest we want to find.
   struct BRS_Lists_DL_Node * Node;
 
-  //Get the first node by priority tracker.
-  Node = Schedule->List_Array [Schedule->Priority].Next;
-
-  //Calulates new highest priority if nesseracy.
-  //If node is list then its empty then decrament the priority tracker.
-  //NOTE: Calculation is is not O(1).
-  //TODO: Find a solution to make it O(1).
-  while ((Schedule->Priority > 0) && (Node == &Schedule->List_Array [Schedule->Priority]))
+  //Find the highest priority non empty list.
+  for (;;)
   {
+    Node = Schedule->List_Array + Schedule->Priority;
+    if ((Node != Node->Next) || (Schedule->Priority == 0)) break;
     Schedule->Priority--;
-    Node = Schedule->List_Array [Schedule->Priority].Next;
   }
 
+  //Get the first node of the list.
+  //The list may be empty here.
+  Node = Node->Next;
+
   //Remove the node from the schedule list.
-  //If node is list then its empty. This can be checked outside this function.
-  //Remove from empty list has no side effect.
   BRS_Lists_DL_Remove (Node);
   return Node;
 }
