@@ -52,9 +52,8 @@ BRS_Schedule_TT_Pull (size_t Offset, size_t Current_Time, struct BRS_Schedule_TT
   {
     return List;
   }
-
+  
   Time = BRS_Type_Offset (size_t, Node, Offset);
-
   if (Time < Current_Time)
   {
     BRS_Lists_DL_Remove (Node);

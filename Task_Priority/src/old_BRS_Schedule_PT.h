@@ -12,7 +12,8 @@ struct BRS_Schedule_PT
   size_t Priority;
 };
 
-static inline void BRS_Schedule_PT_Initialize (struct BRS_Lists_DL_Node * List_Array, size_t Count, struct BRS_Schedule_PT * Schedule)
+static inline void
+BRS_Schedule_PT_Initialize (struct BRS_Lists_DL_Node * List_Array, size_t Count, struct BRS_Schedule_PT * Schedule)
 {
   Schedule->List_Array = List_Array;
   BRS_Lists_DL_Link_Self_Vector (Schedule->List_Array, Count);
@@ -23,19 +24,14 @@ static inline void BRS_Schedule_PT_Initialize (struct BRS_Lists_DL_Node * List_A
 
 //Insert task handler <Item> into <Schedule>.
 //Calulates new highest priority if nesseracy.
-static inline void BRS_Schedule_PT_Insert
-(
-  struct BRS_Lists_DL_Node * Item,
-  size_t Priority,
-  struct BRS_Schedule_PT * Schedule
-)
+static inline void
+BRS_Schedule_PT_Insert (struct BRS_Lists_DL_Node * Item, size_t Priority, struct BRS_Schedule_PT * Schedule)
 {
   //Calulates new highest priority if nesseracy.
   if (Priority > Schedule->Priority)
   {
     Schedule->Priority = Priority;
   }
-
   BRS_Lists_DL_Insert_After (Item, Schedule->List_Array + Priority);
 }
 
@@ -47,7 +43,8 @@ static inline void BRS_Schedule_PT_Insert
 
 //<Return> the highest priority task handler node.
 //Calulates new highest priority if nesseracy.
-static inline struct BRS_Lists_DL_Node * BRS_Schedule_PT_Pull (struct BRS_Schedule_PT * Schedule)
+static inline struct BRS_Lists_DL_Node *
+BRS_Schedule_PT_Pull (struct BRS_Schedule_PT * Schedule)
 {
   struct BRS_Lists_DL_Node * Node;
 
