@@ -69,6 +69,7 @@ static inline void BRS_Lists_DL_Remove_Between
   Prev->Next = Next;
 }
 
+
 //Remove the node <Item>.
 //Link nodes beside node <Item> to each other.
 static inline void BRS_Lists_DL_Remove
@@ -78,7 +79,12 @@ static inline void BRS_Lists_DL_Remove
 }
 
 
-//TODO: check circularity
+
+
+
+
+
+/*
 static inline void BRS_Lists_DL_Looped_Right
 (struct BRS_Lists_DL_Node * Item)
 {
@@ -90,7 +96,7 @@ static inline void BRS_Lists_DL_Looped_Right
     if (Iterator == Item) break;
   }
 }
-
+*/
 
 
 

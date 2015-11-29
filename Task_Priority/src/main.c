@@ -9,6 +9,7 @@
 struct BRS_Task_Handler
 {
   struct BRS_Lists_DL_Node Node;
+  size_t Time;
   size_t Priority;
 };
 
@@ -43,32 +44,50 @@ int main (int argc, char** argv)
   BRS_Schedule_P_Insert (&Handlers[5].Node, Handlers[5].Priority, &Schedule_P);
   BRS_Schedule_P_Insert (&Handlers[6].Node, Handlers[6].Priority, &Schedule_P);
 
-
   struct BRS_Lists_DL_Node * Node;
   struct BRS_Task_Handler * Handler;
+
+  char C;
 
   Node = BRS_Schedule_P_Current (&Schedule_P);
 
   for (;;)
   {
-    printf ("Schedule_P->Priority %i\n", Schedule_P.Priority);
-    char C = getchar ();
-    if (Node == BRS_Schedule_P_Current (&Schedule_P))
+    scanf(" %c", &C);
+
+
+    if (BRS_Schedule_P_Empty (&Schedule_P))
     {
-      printf ("Cycled\n");
+      printf ("BRS_Schedule_P_Empty\n");
     }
     else
     {
-      Handler = BRS_Task_Handler_Iterator_Entry (Node);
-      printf ("Handler->Priority %i\n", Handler->Priority);
-      if (C == 'r')
+
+      switch (C)
       {
-        printf ("BRS_Schedule_P_Remove\n");
-        BRS_Schedule_P_Remove (Node, &Schedule_P);
-        Node = BRS_Schedule_P_Current (&Schedule_P);
+        case 'r':
+        if (Node != BRS_Schedule_P_Current (&Schedule_P))
+        {
+          printf ("BRS_Schedule_P_Remove\n");
+          Handler = BRS_Task_Handler_Iterator_Entry (Node);
+          printf ("Handler->Priority %i\n", Handler->Priority);
+          printf ("Handler->ID %p\n", Handler);
+          BRS_Schedule_P_Remove (Node, &Schedule_P);
+          Node = BRS_Schedule_P_Current (&Schedule_P);
+        }
+        break;
+
+        case 'n':
+        printf ("BRS_Schedule_P_Next\n");
+        Node = BRS_Schedule_P_Next (Node, &Schedule_P);
+        Handler = BRS_Task_Handler_Iterator_Entry (Node);
+        printf ("Handler->Priority %i\n", Handler->Priority);
+        printf ("Handler->ID %p\n", Handler);
+        break;
       }
+
     }
-    Node = Node->Next;
+
   }
 
 
