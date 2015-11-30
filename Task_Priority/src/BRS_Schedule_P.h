@@ -1,6 +1,8 @@
 #ifndef BRS_Schedule_P_h
 #define BRS_Schedule_P_h
 
+#include <assert.h>
+
 #include "BRS_Lists_DL.h"
 
 struct BRS_Schedule_P
@@ -10,22 +12,21 @@ struct BRS_Schedule_P
 };
 
 
-static inline void
-BRS_Schedule_P_Initialize
+static inline void BRS_Schedule_P_Initialize
 (struct BRS_Lists_DL_Node * List, size_t Count, struct BRS_Schedule_P * Schedule)
 {
+  BRS_Lists_DL_Link_Self_Vector (List, Count);
+  Schedule->Priority = 0;
   Schedule->List = List;
-  BRS_Lists_DL_Link_Self_Vector (Schedule->List, Count);
 }
 
 
 
-//Insert task handler <Item> into <Schedule>.
-//Calulates new highest priority if nesseracy.
+//Insert node <Item> into <Schedule>.
+//Updates the highest priority.
 static inline void BRS_Schedule_P_Insert
 (struct BRS_Lists_DL_Node * Item, size_t Priority, struct BRS_Schedule_P * Schedule)
 {
-  //Calulates new highest priority if nesseracy.
   if (Priority > Schedule->Priority)
   {
     Schedule->Priority = Priority;
@@ -35,14 +36,14 @@ static inline void BRS_Schedule_P_Insert
 
 
 
-struct BRS_Lists_DL_Node * BRS_Schedule_P_Current
+static inline struct BRS_Lists_DL_Node * BRS_Schedule_P_Current
 (struct BRS_Schedule_P * Schedule)
 {
   return Schedule->List + Schedule->Priority;
 }
 
 
-//Calulates new highest priority if nesseracy.
+//Updates the highest priority.
 static inline void BRS_Schedule_P_Update
 (struct BRS_Schedule_P * Schedule)
 {
@@ -56,20 +57,20 @@ static inline void BRS_Schedule_P_Update
   }
 }
 
-
-
+//Remove.
+//Updates the highest priority.
 static inline void BRS_Schedule_P_Remove
 (struct BRS_Lists_DL_Node * Node, struct BRS_Schedule_P * Schedule)
 {
   //A node can be a list. Do not remove a list thanks.
-  //assert ((Node == Schedule->List) && (Node != Node->Next));
+  assert ((Node != Schedule->List) || (Node = Node->Next));
 
   BRS_Lists_DL_Remove (Node);
   BRS_Schedule_P_Update (Schedule);
 }
 
 
-
+//Empty 0 or 1
 static inline int BRS_Schedule_P_Empty
 (struct BRS_Schedule_P * Schedule)
 {
@@ -83,8 +84,7 @@ static inline int BRS_Schedule_P_Empty
 }
 
 
-//Return a node.
-//Return NULL if list is empty.
+
 static inline struct BRS_Lists_DL_Node * BRS_Schedule_P_Next
 (struct BRS_Lists_DL_Node * Node, struct BRS_Schedule_P * Schedule)
 {
@@ -95,6 +95,17 @@ static inline struct BRS_Lists_DL_Node * BRS_Schedule_P_Next
   }
   return Node;
 }
+
+
+
+static inline size_t BRS_Schedule_P_Current_Count
+(struct BRS_Schedule_P * Schedule)
+{
+  struct BRS_Lists_DL_Node * Node;
+  Node = BRS_Schedule_P_Current (Schedule);
+  return BRS_Lists_DL_Count (Node);
+}
+
 
 
 #endif

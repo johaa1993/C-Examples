@@ -1,6 +1,7 @@
 #ifndef BRS_Lists_DL_h
 #define BRS_Lists_DL_h
 
+#include <unistd.h>
 
 #define BRS_Lists_DL_Node_Entry(Pointer, Type, Member) \
 ((Type *)((char *)(Pointer) - __builtin_offsetof(Type, Member)))
@@ -79,6 +80,26 @@ static inline void BRS_Lists_DL_Remove
 }
 
 
+
+
+static inline size_t BRS_Lists_DL_Count
+(struct BRS_Lists_DL_Node * Item)
+{
+  struct BRS_Lists_DL_Node * Node;
+  size_t Count;
+
+  Count = 0;
+  Node = Item;
+
+  for (;;)
+  {
+    Node = Node->Next;
+    if (Node == Item) break;
+    Count = Count + 1;
+  }
+
+  return Count;
+}
 
 
 
