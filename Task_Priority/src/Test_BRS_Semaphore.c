@@ -47,23 +47,27 @@ void Test_BRS_Semaphore_1 ()
   assert (BRS_Lists_DL_Count (Schedule->List + 4) == 3);
 
   int R;
-
   R = BRS_Semaphore_Take (Handlers[7].Node, Handlers[7].Priority, Semaphore, Schedule);
   assert (R == 1);
   assert (BRS_Lists_DL_Count (Schedule->List + 4) == 3);
+  assert (BRS_Lists_DL_Count (Semaphore->Schedule->List + 4) == 0);
+
 
   R = BRS_Semaphore_Take (Handlers[1].Node, Handlers[1].Priority, Semaphore, Schedule);
   assert (R == 0);
-  assert (BRS_Schedule_P_Current_Count (Semaphore->Schedule) == 1);
+  assert (BRS_Lists_DL_Count (Semaphore->Schedule->List + 4) == 1);
   assert (BRS_Lists_DL_Count (Schedule->List + 4) == 2);
 
-  R = BRS_Semaphore_Release (Handlers[1].Node, Handlers[1].Priority, Semaphore, Schedule);
-  assert (R == 0);
-
-  R = BRS_Semaphore_Release (Handlers[7].Node, Handlers[7].Priority, Semaphore, Schedule);
-  assert (R == 1);
+  //Semaphore should have zero pending task handler in the list.
+  //Ready schedule should have one more task that is using the semaphore.
+  BRS_Semaphore_Release (Semaphore, Schedule);
   assert (BRS_Lists_DL_Count (Schedule->List + 4) == 3);
+  assert (BRS_Lists_DL_Count (Semaphore->Schedule->List + 4) == 0);
 
+  //No more task handler is waiting for the semaphore.
+  //That is semaphore should then have no owner.
+  BRS_Semaphore_Release (Semaphore, Schedule);
+  assert (Semaphore->Owner == NULL);
 
 
   getchar ();

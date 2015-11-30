@@ -40,14 +40,14 @@ void Test_BRS_Schedule_P_1 ()
 
   printf ("Testing Round-Robin\n");
   printf ("Testing BRS_Schedule_P_Current\n");
-  printf ("Testing BRS_Schedule_P_Next\n");
+  printf ("Testing BRS_Schedule_P_Current_Next_Node\n");
   {
     struct BRS_Lists_DL_Node * Node;
     struct Task_Handler * Handler;
     Node = BRS_Schedule_P_Current (Schedule);
     for (int I = 0; I < 1000; I = I + 1)
     {
-      Node = BRS_Schedule_P_Next (Node, Schedule);
+      Node = BRS_Schedule_P_Current_Next_Node (Node, Schedule);
       Handler = Task_Handler_Entry (Node);
       assert (Handler->Priority == 7);
     }
@@ -79,7 +79,7 @@ void Test_BRS_Schedule_P_1 ()
 
   printf ("Testing Remove all\n");
   printf ("Testing BRS_Schedule_P_Current\n");
-  printf ("Testing BRS_Schedule_P_Next\n");
+  printf ("Testing BRS_Schedule_P_Current_Next_Node\n");
   printf ("Testing BRS_Schedule_P_Remove\n");
   printf ("Testing BRS_Schedule_P_Empty\n");
   {
@@ -88,7 +88,7 @@ void Test_BRS_Schedule_P_1 ()
     for (int I = 0; I < 1000; I = I + 1)
     {
       Node = BRS_Schedule_P_Current (Schedule);
-      Node = BRS_Schedule_P_Next (Node, Schedule);
+      Node = BRS_Schedule_P_Current_Next_Node (Node, Schedule);
       BRS_Schedule_P_Remove (Node, Schedule);
     }
     assert (BRS_Schedule_P_Empty (Schedule) == 1);

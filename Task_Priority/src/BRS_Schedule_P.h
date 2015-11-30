@@ -62,9 +62,6 @@ static inline void BRS_Schedule_P_Update
 static inline void BRS_Schedule_P_Remove
 (struct BRS_Lists_DL_Node * Node, struct BRS_Schedule_P * Schedule)
 {
-  //A node can be a list. Do not remove a list thanks.
-  assert ((Node != Schedule->List) || (Node = Node->Next));
-
   BRS_Lists_DL_Remove (Node);
   BRS_Schedule_P_Update (Schedule);
 }
@@ -85,7 +82,7 @@ static inline int BRS_Schedule_P_Empty
 
 
 
-static inline struct BRS_Lists_DL_Node * BRS_Schedule_P_Next
+static inline struct BRS_Lists_DL_Node * BRS_Schedule_P_Current_Next_Node
 (struct BRS_Lists_DL_Node * Node, struct BRS_Schedule_P * Schedule)
 {
   Node = Node->Next;
@@ -105,6 +102,33 @@ static inline size_t BRS_Schedule_P_Current_Count
   Node = BRS_Schedule_P_Current (Schedule);
   return BRS_Lists_DL_Count (Node);
 }
+
+
+
+
+static inline void BRS_Schedule_P_Transfer
+(struct BRS_Lists_DL_Node * Item, size_t Priority, struct BRS_Schedule_P * A, struct BRS_Schedule_P * B)
+{
+  assert (Item != Item->Next);
+  BRS_Schedule_P_Remove (Item, A);
+  BRS_Schedule_P_Insert (Item, Priority, B);
+}
+
+
+static inline void BRS_Schedule_P_Current_Transfer
+(struct BRS_Schedule_P * A, struct BRS_Schedule_P * B)
+{
+  struct BRS_Lists_DL_Node * Item;
+  Item = BRS_Schedule_P_Current (A);
+  Item = Item->Next;
+  BRS_Schedule_P_Transfer (Item, A->Priority, A, B);
+}
+
+
+
+
+
+
 
 
 

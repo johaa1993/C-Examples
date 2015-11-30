@@ -31,34 +31,24 @@ static inline int BRS_Semaphore_Take
   //If semaphore is taken.
   else
   {
-    BRS_Schedule_P_Remove (Item, Schedule);
-    BRS_Schedule_P_Insert (Item, Priority, Semaphore->Schedule);
+    BRS_Schedule_P_Transfer (Item, Priority, Schedule, Semaphore->Schedule);
     return 0;
   }
 }
 
 
-static inline int BRS_Semaphore_Release
-(struct BRS_Lists_DL_Node * Item, size_t Priority, struct BRS_Semaphore * Semaphore, struct BRS_Schedule_P * Schedule)
+static inline void BRS_Semaphore_Release
+(struct BRS_Semaphore * Semaphore, struct BRS_Schedule_P * Schedule)
 {
-  if (Item == Semaphore->Owner)
+  if (BRS_Schedule_P_Empty (Semaphore->Schedule))
   {
-    if (BRS_Schedule_P_Empty (Semaphore->Schedule))
-    {
-      Semaphore->Owner = NULL;
-    }
-    //Assign the next owner.
-    else
-    {
-      Semaphore->Owner = BRS_Schedule_P_Current (Semaphore->Schedule);
-      BRS_Schedule_P_Remove (Semaphore->Owner, Semaphore->Schedule);
-      BRS_Schedule_P_Insert (Semaphore->Owner, Priority, Schedule);
-    }
-    return 1;
+    Semaphore->Owner = NULL;
   }
   else
   {
-    return 0;
+    //Assign the next owner.
+    Semaphore->Owner = BRS_Schedule_P_Current (Semaphore->Schedule);
+    BRS_Schedule_P_Current_Transfer (Semaphore->Schedule, Schedule);
   }
 }
 
