@@ -77,7 +77,10 @@ static inline int BRS_Schedule_P_Empty
   {
     return 1;
   }
-  return 0;
+  else
+  {
+    return 0;
+  }
 }
 
 
@@ -93,14 +96,16 @@ static inline struct BRS_Lists_DL_Node * BRS_Schedule_P_Current_Next_Node
   return Node;
 }
 
-
+static inline size_t BRS_Schedule_P_Count
+(size_t Priority, struct BRS_Schedule_P * Schedule)
+{
+  return BRS_Lists_DL_Count (Schedule->List + Priority);
+}
 
 static inline size_t BRS_Schedule_P_Current_Count
 (struct BRS_Schedule_P * Schedule)
 {
-  struct BRS_Lists_DL_Node * Node;
-  Node = BRS_Schedule_P_Current (Schedule);
-  return BRS_Lists_DL_Count (Node);
+  return BRS_Schedule_P_Count (Schedule->Priority, Schedule);
 }
 
 
@@ -125,7 +130,11 @@ static inline void BRS_Schedule_P_Current_Transfer
 }
 
 
-
+static inline void BRS_Schedule_P_Promote
+(struct BRS_Lists_DL_Node * Item, size_t Priority, struct BRS_Schedule_P * Schedule)
+{
+  BRS_Schedule_P_Transfer (Item, Priority, Schedule, Schedule);
+}
 
 
 

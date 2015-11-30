@@ -48,7 +48,10 @@ static inline void BRS_Semaphore_Release
   {
     //Assign the next owner.
     Semaphore->Owner = BRS_Schedule_P_Current (Semaphore->Schedule);
-    BRS_Schedule_P_Current_Transfer (Semaphore->Schedule, Schedule);
+    Semaphore->Owner = Semaphore->Owner->Next;
+
+    BRS_Schedule_P_Transfer (Semaphore->Owner, Semaphore->Schedule->Priority, Semaphore->Schedule, Schedule);
+    //BRS_Schedule_P_Current_Transfer (Semaphore->Schedule, Schedule);
   }
 }
 

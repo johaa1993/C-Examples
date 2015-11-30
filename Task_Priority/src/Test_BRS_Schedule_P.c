@@ -38,6 +38,11 @@ void Test_BRS_Schedule_P_1 ()
   BRS_Schedule_P_Insert (Handlers[6].Node, Handlers[6].Priority, Schedule);
   BRS_Schedule_P_Insert (Handlers[7].Node, Handlers[7].Priority, Schedule);
 
+  assert (BRS_Schedule_P_Count (3, Schedule) == 0);
+  BRS_Schedule_P_Promote (Handlers[7].Node, 3, Schedule);
+  assert (BRS_Schedule_P_Count (3, Schedule) == 1);
+
+
   printf ("Testing Round-Robin\n");
   printf ("Testing BRS_Schedule_P_Current\n");
   printf ("Testing BRS_Schedule_P_Current_Next_Node\n");
@@ -94,6 +99,9 @@ void Test_BRS_Schedule_P_1 ()
     assert (BRS_Schedule_P_Empty (Schedule) == 1);
   }
   printf ("Testing Complete\n\n\n");
+
+
+
 
 
 

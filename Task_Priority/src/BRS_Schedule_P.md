@@ -31,7 +31,8 @@ Get the next element-node in the current highest priority list-node. Can be used
 Transfer one element-node from the highest priority list-node from a schedule into a another schedule.
 - **Current_Empty**  
 Check if current highest priority list-node contains no element-nodes.
-
+- **Promate**  
+Change element-node's priority designation.
 
 ## Types
 

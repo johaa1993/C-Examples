@@ -81,7 +81,6 @@ static inline void BRS_Lists_DL_Remove
 
 
 
-
 static inline size_t BRS_Lists_DL_Count
 (struct BRS_Lists_DL_Node * Item)
 {
@@ -118,9 +117,5 @@ static inline void BRS_Lists_DL_Looped_Right
   }
 }
 */
-
-
-
-
 
 #endif
