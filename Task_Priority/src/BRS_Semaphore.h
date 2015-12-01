@@ -18,17 +18,17 @@ static inline void BRS_Semaphore_Initialize
 }
 
 
-
 static inline int BRS_Semaphore_Take
 (struct BRS_Lists_DL_Node * Item, size_t Priority, struct BRS_Semaphore * Semaphore, struct BRS_Schedule_P * Schedule)
 {
-  //If semaphore is free.
+  //You should not take the semaphore if you are already the owner.
+  assert (Item != Semaphore->Owner);
+
   if (Semaphore->Owner == NULL)
   {
     Semaphore->Owner = Item;
     return 1;
   }
-  //If semaphore is taken.
   else
   {
     BRS_Schedule_P_Transfer (Item, Priority, Schedule, Semaphore->Schedule);
@@ -50,8 +50,11 @@ static inline void BRS_Semaphore_Release
     Semaphore->Owner = BRS_Schedule_P_Current (Semaphore->Schedule);
     Semaphore->Owner = Semaphore->Owner->Next;
 
+    //Empty list not allowed.
+    assert (Semaphore->Owner != Semaphore->Owner->Next);
+
+    //Move the inheritor to the <Schedule>
     BRS_Schedule_P_Transfer (Semaphore->Owner, Semaphore->Schedule->Priority, Semaphore->Schedule, Schedule);
-    //BRS_Schedule_P_Current_Transfer (Semaphore->Schedule, Schedule);
   }
 }
 

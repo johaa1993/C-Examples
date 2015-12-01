@@ -27,6 +27,7 @@ static inline void BRS_Schedule_P_Initialize
 static inline void BRS_Schedule_P_Insert
 (struct BRS_Lists_DL_Node * Item, size_t Priority, struct BRS_Schedule_P * Schedule)
 {
+  assert (Item != Item->Next);
   if (Priority > Schedule->Priority)
   {
     Schedule->Priority = Priority;
@@ -126,13 +127,15 @@ static inline void BRS_Schedule_P_Current_Transfer
   struct BRS_Lists_DL_Node * Item;
   Item = BRS_Schedule_P_Current (A);
   Item = Item->Next;
+  assert (Item != Item->Next);
   BRS_Schedule_P_Transfer (Item, A->Priority, A, B);
 }
 
-
+//Change item priority.
 static inline void BRS_Schedule_P_Promote
 (struct BRS_Lists_DL_Node * Item, size_t Priority, struct BRS_Schedule_P * Schedule)
 {
+  assert (Item != Item->Next);
   BRS_Schedule_P_Transfer (Item, Priority, Schedule, Schedule);
 }
 
