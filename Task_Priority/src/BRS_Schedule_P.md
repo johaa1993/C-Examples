@@ -7,7 +7,7 @@ Other useful procedures is included.
 
 
 ## Dependencies
-1. **BRS_Lists_DL.h**  
+1. **BRS_CDLL.h**  
 Double linked list.
 
 
@@ -36,7 +36,7 @@ Change element-node's priority designation.
 
 ## Types
 
-1. **struct BRS_Lists_DL_Node**  
+1. **struct BRS_CDLL_Node**  
 Double linked list node.
 - **struct BRS_Schedule_P**  
 The schedule.
@@ -49,7 +49,7 @@ Used for countable stuff.
 ## Initialize
 ~~~c
 static inline void BRS_Schedule_P_Initialize
-(struct BRS_Lists_DL_Node * List, size_t Count, struct BRS_Schedule_P * Schedule)
+(struct BRS_CDLL_Node * List, size_t Count, struct BRS_Schedule_P * Schedule)
 ~~~
 
 
@@ -64,20 +64,20 @@ Insert and updates the highest priority in the schedule.
 ### Code
 ~~~c
 static inline void BRS_Schedule_P_Insert
-(struct BRS_Lists_DL_Node * Item, size_t Priority, struct BRS_Schedule_P * Schedule)
+(struct BRS_CDLL_Node * Item, size_t Priority, struct BRS_Schedule_P * Schedule)
 ~~~
 ### Example
 ~~~c
 struct Task_Handler
 {
-  struct BRS_Lists_DL_Node Node [1];
+  struct BRS_CDLL_Node Node [1];
   size_t Priority;
 };
 
 struct Task_Handler Handler;
 
 #define Priority_Count 10
-struct BRS_Lists_DL_Node Schedule_Lists [Priority_Count];
+struct BRS_CDLL_Node Schedule_Lists [Priority_Count];
 struct BRS_Schedule_P Schedule [1];
 
 BRS_Schedule_P_Initialize (Schedule_Lists, Priority_Count, Schedule);
@@ -94,7 +94,7 @@ Do not remove a list-node of a non-empty-list.
 Removing a list-node from a empty-list have no effect.
 ~~~c
 static inline void BRS_Schedule_P_Remove
-(struct BRS_Lists_DL_Node * Node, struct BRS_Schedule_P * Schedule)
+(struct BRS_CDLL_Node * Node, struct BRS_Schedule_P * Schedule)
 ~~~
 
 ---

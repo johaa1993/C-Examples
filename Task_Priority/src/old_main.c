@@ -8,19 +8,19 @@
 
 struct BRS_Task_Handler
 {
-  struct BRS_Lists_DL_Node Node;
+  struct BRS_CDLL_Node Node;
   size_t Time;
   size_t Priority;
 };
 
-#define BRS_Task_Handler_Iterator_Entry(Iterator) BRS_Lists_DL_Node_Entry (Iterator, struct BRS_Task_Handler, Node)
+#define BRS_Task_Handler_Iterator_Entry(Iterator) BRS_CDLL_Node_Entry (Iterator, struct BRS_Task_Handler, Node)
 
 struct BRS_Task_Handler Handlers [7];
 
 //Setup priority scheduler.
 #define Schedule_P_List_Count 10
 struct BRS_Schedule_P Schedule_P;
-struct BRS_Lists_DL_Node Schedule_P_List [Schedule_P_List_Count];
+struct BRS_CDLL_Node Schedule_P_List [Schedule_P_List_Count];
 
 
 int main (int argc, char** argv)
@@ -44,7 +44,7 @@ int main (int argc, char** argv)
   BRS_Schedule_P_Insert (&Handlers[5].Node, Handlers[5].Priority, &Schedule_P);
   BRS_Schedule_P_Insert (&Handlers[6].Node, Handlers[6].Priority, &Schedule_P);
 
-  struct BRS_Lists_DL_Node * Node;
+  struct BRS_CDLL_Node * Node;
   struct BRS_Task_Handler * Handler;
 
   char C;

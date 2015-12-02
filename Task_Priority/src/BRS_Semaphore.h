@@ -6,12 +6,12 @@
 struct BRS_Semaphore
 {
   struct BRS_Schedule_P Schedule [1];
-  struct BRS_Lists_DL_Node * Owner;
+  struct BRS_CDLL_Node * Owner;
 };
 
 
 static inline void BRS_Semaphore_Initialize
-(struct BRS_Lists_DL_Node * List, size_t Count, struct BRS_Semaphore * Semaphore)
+(struct BRS_CDLL_Node * List, size_t Count, struct BRS_Semaphore * Semaphore)
 {
   BRS_Schedule_P_Initialize (List, Count, Semaphore->Schedule);
   Semaphore->Owner = NULL;
@@ -19,7 +19,7 @@ static inline void BRS_Semaphore_Initialize
 
 
 static inline int BRS_Semaphore_Take
-(struct BRS_Lists_DL_Node * Item, size_t Priority, struct BRS_Semaphore * Semaphore, struct BRS_Schedule_P * Schedule)
+(struct BRS_CDLL_Node * Item, size_t Priority, struct BRS_Semaphore * Semaphore, struct BRS_Schedule_P * Schedule)
 {
   //You should not take the semaphore if you are already the owner.
   assert (Item != Semaphore->Owner);

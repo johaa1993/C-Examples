@@ -1,21 +1,21 @@
 #ifndef BRS_Schedule_T_h
 #define BRS_Schedule_T_h
 
-#include "BRS_Lists_DL.h"
+#include "BRS_CDLL.h"
 #include "BRS_Address.h"
 
 
 struct BRS_Schedule_T
 {
-  struct BRS_Lists_DL_Node List;
+  struct BRS_CDLL_Node List;
 };
 
 
 static inline void BRS_Schedule_T_Insert
-(struct BRS_Lists_DL_Node * Item, size_t Offset, struct BRS_Schedule_T * Schedule)
+(struct BRS_CDLL_Node * Item, size_t Offset, struct BRS_Schedule_T * Schedule)
 {
-  struct BRS_Lists_DL_Node * Node;
-  struct BRS_Lists_DL_Node * List;
+  struct BRS_CDLL_Node * Node;
+  struct BRS_CDLL_Node * List;
   size_t Time;
   size_t Compare;
 
@@ -35,15 +35,15 @@ static inline void BRS_Schedule_T_Insert
     //Iterate through list.
     Node = Node->Next;
   }
-  BRS_Lists_DL_Insert_After (Item, Node->Prev);
+  BRS_CDLL_Insert_After (Item, Node->Prev);
 }
 
 
-static inline struct BRS_Lists_DL_Node * BRS_Schedule_T_Pull
+static inline struct BRS_CDLL_Node * BRS_Schedule_T_Pull
 (size_t Offset, size_t Time, struct BRS_Schedule_T * Schedule)
 {
-  struct BRS_Lists_DL_Node * List;
-  struct BRS_Lists_DL_Node * Node;
+  struct BRS_CDLL_Node * List;
+  struct BRS_CDLL_Node * Node;
   size_t Time;
 
   List = &Schedule->List;
@@ -60,7 +60,7 @@ static inline struct BRS_Lists_DL_Node * BRS_Schedule_T_Pull
 
   if (Compare < Time)
   {
-    BRS_Lists_DL_Remove (Node);
+    BRS_CDLL_Remove (Node);
     return Node;
   }
 
