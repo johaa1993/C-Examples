@@ -5,19 +5,29 @@
 #include <stdio.h>
 #include "BRS_CDLL.h"
 
+#define Test_BRS_CDLL_1_Model_Position_Node_Offset sizeof (struct BRS_CDLL_Node)
+
+static int Test_BRS_CDLL_1_Compare (struct BRS_CDLL_Node * Insertion, struct BRS_CDLL_Node * Iterator)
+{
+  int Insert_Value;
+  int Iterator_Value;
+  Insert_Value = BRS_Type_Offset (int, Insertion, Test_BRS_CDLL_1_Model_Position_Node_Offset);
+  Iterator_Value = BRS_Type_Offset (int, Iterator, Test_BRS_CDLL_1_Model_Position_Node_Offset);
+  return Insert_Value < Iterator_Value;
+}
 
 static void Test_BRS_CDLL_1 ()
 {
 
   struct Model
   {
-    long Banana;
+    long Itude;
     struct BRS_CDLL_Node Node [1];
     int Position;
     char Coal;
   };
 
-  #define Model_Position_Node_Offset sizeof (struct BRS_CDLL_Node)
+
 
   struct BRS_CDLL_Node List [1];
   struct Model Object [1000];
@@ -30,11 +40,11 @@ static void Test_BRS_CDLL_1 ()
   Object[3].Position = 0;
   Object[4].Position = 3;
 
-  BRS_CDLL_Insert_Sorted (Object[0].Node, Model_Position_Node_Offset, List);
-  BRS_CDLL_Insert_Sorted (Object[1].Node, Model_Position_Node_Offset, List);
-  BRS_CDLL_Insert_Sorted (Object[2].Node, Model_Position_Node_Offset, List);
-  BRS_CDLL_Insert_Sorted (Object[3].Node, Model_Position_Node_Offset, List);
-  BRS_CDLL_Insert_Sorted (Object[4].Node, Model_Position_Node_Offset, List);
+  BRS_CDLL_Insert_Sorted (Test_BRS_CDLL_1_Compare, Object[0].Node, List);
+  BRS_CDLL_Insert_Sorted (Test_BRS_CDLL_1_Compare, Object[1].Node, List);
+  BRS_CDLL_Insert_Sorted (Test_BRS_CDLL_1_Compare, Object[2].Node, List);
+  BRS_CDLL_Insert_Sorted (Test_BRS_CDLL_1_Compare, Object[3].Node, List);
+  BRS_CDLL_Insert_Sorted (Test_BRS_CDLL_1_Compare, Object[4].Node, List);
 
   struct BRS_CDLL_Node * Iterator;
   Iterator = List->Next;
@@ -42,12 +52,17 @@ static void Test_BRS_CDLL_1 ()
   for (;;)
   {
     if (Iterator == List) break;
-    printf("Position %i\n", BRS_Type_Offset (int, Iterator, Model_Position_Node_Offset));
+    printf("Position %i\n", BRS_Type_Offset (int, Iterator, Test_BRS_CDLL_1_Model_Position_Node_Offset));
     Iterator = Iterator->Next;
   }
 
   getchar ();
 
 }
+
+
+
+
+
 
 #endif

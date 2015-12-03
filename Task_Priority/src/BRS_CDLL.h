@@ -38,7 +38,7 @@ static inline void BRS_CDLL_Link_Self_Vector
 
 
 //Insert the node <Item> between nodes <Prev> and <Next>.
-static inline void BRS_CDLL_Insert
+static inline void BRS_CDLL_Insert_Between
 (struct BRS_CDLL_Node * Item, struct BRS_CDLL_Node * Prev, struct BRS_CDLL_Node * Next)
 {
   Item->Next = Next;
@@ -52,7 +52,7 @@ static inline void BRS_CDLL_Insert
 static inline void BRS_CDLL_Insert_After
 (struct BRS_CDLL_Node * Item, struct BRS_CDLL_Node * Item_0)
 {
-  BRS_CDLL_Insert (Item, Item_0, Item_0->Next);
+  BRS_CDLL_Insert_Between (Item, Item_0, Item_0->Next);
 }
 
 
@@ -60,7 +60,7 @@ static inline void BRS_CDLL_Insert_After
 static inline void BRS_CDLL_Insert_Before
 (struct BRS_CDLL_Node * Item, struct BRS_CDLL_Node * Item_0)
 {
-  BRS_CDLL_Insert (Item, Item_0->Prev, Item_0);
+  BRS_CDLL_Insert_Between (Item, Item_0->Prev, Item_0);
 }
 
 
@@ -104,25 +104,21 @@ static inline size_t BRS_CDLL_Count
 }
 
 
-
+typedef int (*BRS_CDLL_Insert_Sorted_Compare)(struct BRS_CDLL_Node * Insertion, struct BRS_CDLL_Node * Iterator);
 
 static inline size_t BRS_CDLL_Insert_Sorted
-(struct BRS_CDLL_Node * Item, size_t Offset, struct BRS_CDLL_Node * List)
+(BRS_CDLL_Insert_Sorted_Compare Compare, struct BRS_CDLL_Node * Item, struct BRS_CDLL_Node * List)
 {
-  size_t Compare;
-  size_t Time;
   struct BRS_CDLL_Node * Iterator;
   assert (Item != Item->Next);
-  Time = BRS_Type_Offset (size_t, Item, Offset);
   Iterator = List->Next;
   for (;;)
   {
     if (Iterator == List) break;
-    Compare = BRS_Type_Offset (size_t, Iterator, Offset);
-    if (Time < Compare) break;
+    if (Compare (Item, Iterator)) break;
     Iterator = Iterator->Next;
   }
-  BRS_CDLL_Insert_After (Item, Iterator->Prev);
+  BRS_CDLL_Insert_Before (Item, Iterator);
 }
 
 
