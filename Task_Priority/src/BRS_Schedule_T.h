@@ -7,65 +7,43 @@
 
 struct BRS_Schedule_T
 {
-  struct BRS_CDLL_Node List;
+  struct BRS_CDLL_Node List [1];
 };
 
-
-static inline void BRS_Schedule_T_Insert
-(struct BRS_CDLL_Node * Item, size_t Offset, struct BRS_Schedule_T * Schedule)
+struct BRS_Schedule_T_Node
 {
-  struct BRS_CDLL_Node * Node;
-  struct BRS_CDLL_Node * List;
+  struct BRS_CDLL_Node Node [1];
   size_t Time;
-  size_t Compare;
+};
 
-  List = &Schedule->List;
-  Node = List->Next;
-  //Locate time data relative to item.
-  Time = BRS_Type_Offset (size_t, Item, Offset);
-  for (;;)
-  {
-    //Break if list is empty.
-    if (Node == List) break;
-    //List is not empty extract comparison value.
-    Compare = BRS_Type_Offset (size_t, Node, Offset);
-    //Node is the location where new item is inserted.
-    //If we break node is the position to insert.
-    if (Time < Compare) break;
-    //Iterate through list.
-    Node = Node->Next;
-  }
-  BRS_CDLL_Insert_After (Item, Node->Prev);
+int BRS_Schedule_T_Compare (struct BRS_CDLL_Node * Insertion, struct BRS_CDLL_Node * Iterator)
+{
+  int Value_Insertion;
+  int Value_Iterator;
+  Value_Insertion = BRS_Type_Offset (size_t, Insertion, sizeof (struct BRS_CDLL_Node));
+  Value_Iterator = BRS_Type_Offset (size_t, Iterator, sizeof (struct BRS_CDLL_Node));
+  return Value_Insertion < Value_Iterator;
 }
 
 
-static inline struct BRS_CDLL_Node * BRS_Schedule_T_Pull
-(size_t Offset, size_t Time, struct BRS_Schedule_T * Schedule)
+static inline void BRS_Schedule_T_Insert
+(struct BRS_Schedule_T_Node * Item, struct BRS_Schedule_T * Schedule)
 {
-  struct BRS_CDLL_Node * List;
-  struct BRS_CDLL_Node * Node;
-  size_t Time;
+  BRS_CDLL_Insert_Sorted (BRS_Schedule_T_Compare, Item->Node, Schedule->List);
+}
 
-  List = &Schedule->List;
-  Node = List->Next;
 
-  //List is empty.
-  if (Node == List)
+static inline size_t BRS_Schedule_T_First
+(struct BRS_Schedule_T * Schedule)
+{
+  if (Schedule->List == Schedule->List->Next)
   {
-    return List;
+    return 0;
   }
-
-  //Extract comparison value.
-  Compare = BRS_Type_Offset (size_t, Node, Offset);
-
-  if (Compare < Time)
+  else
   {
-    BRS_CDLL_Remove (Node);
-    return Node;
+    return BRS_Type_Offset (size_t, Schedule->List->Next, sizeof (struct BRS_CDLL_Node));
   }
-
-  //List is not empty.
-  return NULL;
 }
 
 

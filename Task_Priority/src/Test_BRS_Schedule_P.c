@@ -1,6 +1,3 @@
-#ifndef Test_BRS_Schedule_P_h
-#define Test_BRS_Schedule_P_h
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -10,7 +7,7 @@
 
 #include "BRS_Schedule_P.h"
 
-static void Test_BRS_Schedule_P_1 ()
+int main (int argc, char** argv)
 {
 
   struct Task_Handler
@@ -114,5 +111,3 @@ static void Test_BRS_Schedule_P_1 ()
 
   getchar ();
 }
-
-#endif

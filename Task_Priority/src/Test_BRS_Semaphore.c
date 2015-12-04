@@ -1,6 +1,3 @@
-#ifndef Test_BRS_Semaphore_h
-#define Test_BRS_Semaphore_h
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -13,20 +10,21 @@
 #include "BRS_Semaphore.h"
 
 
-void Test_BRS_Semaphore_1 ()
+
+struct Task_Handler
 {
+  long Itude;
+  struct BRS_CDLL_Node Node [1];
+  size_t Priority;
+  char Coal;
+};
+
+#define Task_Handler_Entry(Iterator) \
+BRS_CDLL_Node_Entry (Iterator, struct Task_Handler, Node)
 
 
-  struct Task_Handler
-  {
-    int Dummy;
-    struct BRS_CDLL_Node Node [1];
-    size_t Priority;
-  };
-
-  #define Task_Handler_Entry(Iterator) \
-  BRS_CDLL_Node_Entry (Iterator, struct Task_Handler, Node)
-
+int main (int argc, char** argv)
+{
 
   struct Task_Handler Handlers [10];
 
@@ -100,7 +98,3 @@ void Test_BRS_Semaphore_1 ()
   getchar ();
 
 }
-
-
-
-#endif
