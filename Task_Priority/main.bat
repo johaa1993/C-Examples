@@ -1,4 +1,11 @@
-del "bin\main.exe"
+cd bin
+del main.exe
+cd ..
+
 gcc -o bin\main src\main.c
-start bin\main.exe
+
+cd bin
+start main.exe
+cd ..
+
 pause

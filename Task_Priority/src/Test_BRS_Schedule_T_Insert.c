@@ -10,7 +10,8 @@
 struct Test_Handler
 {
   char Coal;
-  struct BRS_Schedule_T_Node Node [1];
+  struct BRS_CDLL_Node Node [1];
+  size_t Time;
   long Itude;
 };
 
@@ -19,33 +20,39 @@ int main (int argc, char** argv)
 
   struct Test_Handler Handler [10];
   struct BRS_Schedule_T Schedule [1];
+  struct BRS_CDLL_Node * Node;
 
   BRS_CDLL_Link_Self (Schedule->List);
 
-  printf ("First %04i\n", BRS_Schedule_T_First (Schedule));
-  assert (BRS_Schedule_T_First (Schedule) == 0);
+  Handler[0].Time = 33;
+  Handler[1].Time = 4;
+  Handler[2].Time = 7;
+  Handler[3].Time = 3;
+  Handler[4].Time = 55;
+  Handler[5].Time = 7;
+  Handler[6].Time = 4;
+  Handler[7].Time = 4;
 
-  Handler[0].Node->Time = 2;
-  Handler[1].Node->Time = 4;
-  Handler[2].Node->Time = 7;
-  Handler[3].Node->Time = 2;
-  Handler[4].Node->Time = 55;
-  Handler[5].Node->Time = 7;
-  Handler[6].Node->Time = 4;
-  Handler[7].Node->Time = 4;
+  Node = BRS_Schedule_T_Pull_Temporal (Schedule, 999);
+  assert (Node == NULL);
 
   for (size_t I = 0; I < 8; I = I + 1)
   {
     printf ("Insert ");
     printf ("I %04i ", I);
-    printf ("P %04i ", Handler[I].Node->Time);
+    printf ("P %04i ", Handler[I].Time);
     printf ("\n");
     BRS_Schedule_T_Insert (Handler[I].Node, Schedule);
   }
 
-  printf ("First %04i\n", BRS_Schedule_T_First (Schedule));
-  assert (BRS_Schedule_T_First (Schedule) == 2);
+  Node = BRS_Schedule_T_Pull_Temporal (Schedule, 2);
+  assert (Node == NULL);
 
+  Node = BRS_Schedule_T_Pull_Temporal (Schedule, 10);
+  assert (Node == Handler[3].Node);
+
+  Node = BRS_Schedule_T_Pull_Temporal (Schedule, 10);
+  assert (Node == Handler[1].Node);
 
   getchar ();
 }

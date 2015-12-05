@@ -10,12 +10,7 @@ struct BRS_Schedule_T
   struct BRS_CDLL_Node List [1];
 };
 
-struct BRS_Schedule_T_Node
-{
-  struct BRS_CDLL_Node Node [1];
-  size_t Time;
-};
-
+//Internal function.
 int BRS_Schedule_T_Compare (struct BRS_CDLL_Node * Insertion, struct BRS_CDLL_Node * Iterator)
 {
   int Value_Insertion;
@@ -27,24 +22,43 @@ int BRS_Schedule_T_Compare (struct BRS_CDLL_Node * Insertion, struct BRS_CDLL_No
 
 
 static inline void BRS_Schedule_T_Insert
-(struct BRS_Schedule_T_Node * Item, struct BRS_Schedule_T * Schedule)
+(struct BRS_CDLL_Node * Item, struct BRS_Schedule_T * Schedule)
 {
-  BRS_CDLL_Insert_Sorted (BRS_Schedule_T_Compare, Item->Node, Schedule->List);
+  BRS_CDLL_Insert_Sorted (BRS_Schedule_T_Compare, Item, Schedule->List);
 }
 
 
-static inline size_t BRS_Schedule_T_First
-(struct BRS_Schedule_T * Schedule)
+
+
+static inline struct BRS_CDLL_Node * BRS_Schedule_T_Pull_Temporal
+(struct BRS_Schedule_T * Schedule, size_t Time)
 {
-  if (Schedule->List == Schedule->List->Next)
+  struct BRS_CDLL_Node * Node;
+  size_t Wake;
+
+  //Get first element-node.
+  Node = Schedule->List;
+  Node = Node->Next;
+
+  //Check if list is empty.
+  if (Node == Node->Next)
   {
-    return 0;
+    return NULL;
   }
-  else
+
+  //Get passed wake time node
+  Wake = BRS_Type_Offset (size_t, Node, sizeof (struct BRS_CDLL_Node));
+
+  if (Time > Wake)
   {
-    return BRS_Type_Offset (size_t, Schedule->List->Next, sizeof (struct BRS_CDLL_Node));
+    BRS_CDLL_Remove (Node);
+    return Node;
   }
+
+  //No node has passed wake time.
+  return NULL;
 }
+
 
 
 #endif
